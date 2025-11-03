@@ -47,7 +47,7 @@ export function MedicationsPage() {
     patientId: "",
     administrationRoute: "",
     frequency: "",
-    times: "",
+    times: [] as string[],
     prescriptionType: "",
     treatmentType: "continuo" as TreatmentType,
     treatmentStartDate: "",
@@ -95,6 +95,7 @@ export function MedicationsPage() {
     const currentStock = parseFloat(newMedication.currentStock) || 0;
     const daysLeft = dailyConsumption > 0 ? Math.floor(currentStock / dailyConsumption) : 0;
 
+    const timesArray = (newMedication.times || []).map(t => t.trim()).filter(Boolean);
     addMedication({
       name: newMedication.name,
       dosage: parseFloat(newMedication.dosage) || 0,
@@ -103,7 +104,7 @@ export function MedicationsPage() {
       patientId: newMedication.patientId,
       route: newMedication.administrationRoute,
       frequency: newMedication.frequency,
-      times: newMedication.times.split(",").map(t => t.trim()).filter(t => t),
+      times: timesArray,
       prescriptionType: newMedication.prescriptionType,
       prescriptionExpiry: new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0],
       treatmentType: newMedication.treatmentType,
@@ -132,7 +133,7 @@ export function MedicationsPage() {
       patientId: "",
       administrationRoute: "",
       frequency: "",
-      times: "",
+      times: [],
       prescriptionType: "",
       treatmentType: "continuo",
       treatmentStartDate: "",
@@ -339,13 +340,40 @@ export function MedicationsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="times">Horários</Label>
-                  <Input
-                    id="times"
-                    value={newMedication.times}
-                    onChange={(e) => setNewMedication({ ...newMedication, times: e.target.value })}
-                    placeholder="Ex: 08:00, 20:00"
-                  />
+                  <Label>Horários</Label>
+                  <div className="space-y-2">
+                    {(newMedication.times || []).map((t, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <Input
+                          type="time"
+                          value={t}
+                          onChange={(e) => {
+                            const copy = [...newMedication.times];
+                            copy[idx] = e.target.value;
+                            setNewMedication({ ...newMedication, times: copy });
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            const copy = [...newMedication.times];
+                            copy.splice(idx, 1);
+                            setNewMedication({ ...newMedication, times: copy });
+                          }}
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setNewMedication({ ...newMedication, times: [...(newMedication.times || []), ""] })}
+                    >
+                      Adicionar horário
+                    </Button>
+                  </div>
                 </div>
               </div>
 

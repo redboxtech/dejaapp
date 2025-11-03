@@ -1,4 +1,5 @@
 using DejaBackend.Application.Stock.Commands.AddStockEntry;
+using DejaBackend.Application.Stock.Queries.GetStock;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,16 @@ public class StockController : ControllerBase
         _mediator = mediator;
     }
 
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetStock()
+    {
+        var query = new GetStockQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
     [HttpPost("entry")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -33,13 +44,12 @@ public class StockController : ControllerBase
             }
             return Ok(new { message = "Stock entry added successfully." });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while adding stock entry." });
         }
     }

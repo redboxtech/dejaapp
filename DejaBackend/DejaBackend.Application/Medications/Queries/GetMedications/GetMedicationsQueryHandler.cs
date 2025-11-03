@@ -26,10 +26,12 @@ public class GetMedicationsQueryHandler : IRequestHandler<GetMedicationsQuery, L
         var userId = _currentUserService.UserId.Value;
 
         // 1. Get all patients the user has access to (owned or shared)
-        var accessiblePatientIds = await _context.Patients
+        var allPatients = await _context.Patients
+            .ToListAsync(cancellationToken);
+        var accessiblePatientIds = allPatients
             .Where(p => p.OwnerId == userId || p.SharedWith.Contains(userId))
             .Select(p => p.Id)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         // 2. Get all medications for those patients
         var medications = await _context.Medications

@@ -24,21 +24,74 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const { patients, medications, stockItems, replenishmentRequests } = useData();
 
   // Memoized computations para performance
-  const upcomingMedications = useMemo(() => {
+  const { morningMeds, afternoonMeds, nightMeds, visibleSectionTitle, visibleItems } = useMemo(() => {
+    const parseHour = (t: string) => {
+      const [h] = t.split(":");
+      const n = parseInt(h || "0", 10);
+      return isNaN(n) ? 0 : n;
+    };
+    const parseMinutes = (t: string) => {
+      const [h, m] = t.split(":");
+      const hh = parseInt(h || "0", 10);
+      const mm = parseInt(m || "0", 10);
+      return (isNaN(hh) ? 0 : hh) * 60 + (isNaN(mm) ? 0 : mm);
+    };
+    const all = medications.flatMap(med =>
+      med.times.map(time => ({
+        patient: med.patient,
+        medication: `${med.name} ${med.dosage}${med.unit === "comprimido" ? "mg" : med.unit}`,
+        time,
+        status: "pending" as const,
+      }))
+    ).sort((a, b) => a.time.localeCompare(b.time));
+
+    const morning = all.filter(m => {
+      const h = parseHour(m.time);
+      return h >= 5 && h < 12;
+    });
+    const afternoon = all.filter(m => {
+      const h = parseHour(m.time);
+      return h >= 12 && h < 18;
+    });
+    const night = all.filter(m => {
+      const h = parseHour(m.time);
+      return h >= 18 || h < 5;
+    });
+    // Seleção de exibição: pendentes do período atual OU todas do próximo período
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    
-    return medications
-      .flatMap(med => 
-        med.times.map(time => ({
-          patient: med.patient,
-          medication: `${med.name} ${med.dosage}${med.unit === "comprimido" ? "mg" : med.unit}`,
-          time,
-          status: "pending" as const
-        }))
-      )
-      .sort((a, b) => a.time.localeCompare(b.time))
-      .slice(0, 4);
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    let currentTitle = "";
+    let items: typeof all = [];
+
+    const currentPeriod = now.getHours() >= 5 && now.getHours() < 12
+      ? "morning"
+      : now.getHours() >= 12 && now.getHours() < 18
+      ? "afternoon"
+      : "night";
+
+    const periodToItems = {
+      morning,
+      afternoon,
+      night,
+    } as const;
+
+    const nextOf = (p: "morning" | "afternoon" | "night") =>
+      p === "morning" ? "afternoon" : p === "afternoon" ? "night" : "morning";
+
+    const titleMap = { morning: "Manhã", afternoon: "Tarde", night: "Noite" } as const;
+
+    const currentList = periodToItems[currentPeriod];
+    const pendingInCurrent = currentList.filter(m => parseMinutes(m.time) >= nowMinutes);
+    if (pendingInCurrent.length > 0) {
+      currentTitle = titleMap[currentPeriod];
+      items = pendingInCurrent;
+    } else {
+      const nextPeriod = nextOf(currentPeriod);
+      currentTitle = titleMap[nextPeriod];
+      items = periodToItems[nextPeriod];
+    }
+
+    return { morningMeds: morning, afternoonMeds: afternoon, nightMeds: night, visibleSectionTitle: currentTitle, visibleItems: items };
   }, [medications]);
 
   const criticalStocks = useMemo(() => {
@@ -213,23 +266,28 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {upcomingMedications.map((med, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-[#16808c]" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium">{med.medication}</div>
-                  <div className="text-sm text-gray-500">{med.patient}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-[#16808c]">{med.time}</div>
-                  <Badge variant="outline" className="text-xs">
-                    Pendente
-                  </Badge>
-                </div>
+            <div className="text-xs uppercase text-gray-500 mb-2">{visibleSectionTitle}</div>
+            {visibleItems.length === 0 ? (
+              <div className="text-sm text-gray-400">Sem horários neste período</div>
+            ) : (
+              <div className="space-y-3">
+                {visibleItems.map((med, idx) => (
+                  <div key={`v-${idx}`} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
+                      <Clock className="h-5 w-5 text-[#16808c]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">{med.medication}</div>
+                      <div className="text-sm text-gray-500">{med.patient}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-[#16808c]">{med.time}</div>
+                      <Badge variant="outline" className="text-xs">Pendente</Badge>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
       </div>

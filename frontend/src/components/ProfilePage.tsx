@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -12,7 +12,9 @@ import {
   UserPlus,
   Trash2,
   Users,
-  Shield
+  Shield,
+  Search,
+  X
 } from "lucide-react";
 import {
   Dialog,
@@ -39,11 +41,12 @@ import { Separator } from "./ui/separator";
 import { toast } from "sonner@2.0.3";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
+import { apiFetch } from "@/lib/api";
 
 interface Caregiver {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   patients: string[]; // IDs dos pacientes
   addedBy: string;
@@ -81,104 +84,105 @@ export function ProfilePage() {
     phone: "",
     patients: [] as string[]
   });
+  const [patientSearchTerm, setPatientSearchTerm] = useState("");
 
   const [newRepresentative, setNewRepresentative] = useState({
     email: ""
   });
 
-  // Mock data - Em produção viria do backend
-  const [caregivers, setCaregivers] = useState<Caregiver[]>([
-    {
-      id: "cg1",
-      name: "Ana Paula Silva",
-      email: "ana.paula@email.com",
-      phone: "(11) 98765-4321",
-      patients: ["1", "2"],
-      addedBy: currentUser?.id || "",
-      addedAt: "2025-01-15",
-      status: "active"
-    },
-    {
-      id: "cg2",
-      name: "Carlos Alberto",
-      email: "carlos@email.com",
-      phone: "(11) 91234-5678",
-      patients: ["3"],
-      addedBy: currentUser?.id || "",
-      addedAt: "2025-02-10",
-      status: "active"
-    }
-  ]);
-
+  const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [representatives, setRepresentatives] = useState<Representative[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [cgs, reps] = await Promise.all([
+          apiFetch<Caregiver[]>(`/caregivers`),
+          apiFetch<Representative[]>(`/representatives`),
+        ]);
+        setCaregivers((cgs || []).map(c => ({
+          ...c,
+          addedBy: currentUser?.id || "",
+        })));
+        setRepresentatives(reps || []);
+      } catch (e) {
+        // silent; page can still work
+      }
+    };
+    load();
+  }, [currentUser?.id]);
 
   const handleEditProfile = () => {
     toast.success("Perfil atualizado com sucesso!");
     setIsEditProfileOpen(false);
   };
 
-  const handleAddCaregiver = () => {
-    if (!newCaregiver.name || !newCaregiver.email) {
-      toast.error("Preencha os campos obrigatórios");
+  const handleAddCaregiver = async () => {
+    if (!newCaregiver.name || !newCaregiver.phone) {
+      toast.error("Preencha os campos obrigatórios (Nome e Telefone)");
       return;
     }
-
-    const caregiver: Caregiver = {
-      id: `cg_${Date.now()}`,
-      name: newCaregiver.name,
-      email: newCaregiver.email,
-      phone: newCaregiver.phone,
-      patients: newCaregiver.patients,
-      addedBy: currentUser?.id || "",
-      addedAt: new Date().toISOString().split('T')[0],
-      status: "active"
-    };
-
-    setCaregivers([...caregivers, caregiver]);
-    toast.success("Cuidador adicionado com sucesso!");
-    setIsAddCaregiverOpen(false);
-    setNewCaregiver({ name: "", email: "", phone: "", patients: [] });
+    try {
+      await apiFetch(`/caregivers`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newCaregiver.name,
+          email: newCaregiver.email,
+          phone: newCaregiver.phone,
+          patients: newCaregiver.patients,
+        }),
+      });
+      const updated = await apiFetch<Caregiver[]>(`/caregivers`);
+      setCaregivers((updated || []).map(c => ({ ...c, addedBy: currentUser?.id || "" })));
+      toast.success("Cuidador adicionado com sucesso!");
+      setIsAddCaregiverOpen(false);
+      setNewCaregiver({ name: "", email: "", phone: "", patients: [] });
+      setPatientSearchTerm("");
+    } catch (e) {
+      toast.error("Erro ao adicionar cuidador");
+    }
   };
 
-  const handleAddRepresentative = () => {
+  const handleAddRepresentative = async () => {
     if (!newRepresentative.email) {
       toast.error("Digite o email do representante");
       return;
     }
-
-    // Verificar se já existe
-    if (representatives.some(r => r.email === newRepresentative.email)) {
-      toast.error("Este representante já foi adicionado");
-      return;
+    try {
+      await apiFetch(`/representatives`, {
+        method: 'POST',
+        body: JSON.stringify({ email: newRepresentative.email }),
+      });
+      const updated = await apiFetch<Representative[]>(`/representatives`);
+      setRepresentatives(updated || []);
+      toast.success("Convite enviado ao representante!");
+      setIsAddRepresentativeOpen(false);
+      setNewRepresentative({ email: "" });
+    } catch (e) {
+      toast.error("Erro ao adicionar representante");
     }
-
-    const representative: Representative = {
-      id: `rep_${Date.now()}`,
-      name: "Representante Convidado", // Seria obtido do backend
-      email: newRepresentative.email,
-      addedAt: new Date().toISOString().split('T')[0],
-      status: "active"
-    };
-
-    setRepresentatives([...representatives, representative]);
-    toast.success("Convite enviado ao representante!");
-    setIsAddRepresentativeOpen(false);
-    setNewRepresentative({ email: "" });
   };
 
-  const handleDeleteItem = () => {
+  const handleDeleteItem = async () => {
     if (!itemToDelete) return;
-
-    if (itemToDelete.type === "caregiver") {
-      setCaregivers(caregivers.filter(c => c.id !== itemToDelete.id));
-      toast.success("Cuidador removido com sucesso");
-    } else {
-      setRepresentatives(representatives.filter(r => r.id !== itemToDelete.id));
-      toast.success("Representante removido com sucesso");
+    try {
+      if (itemToDelete.type === "caregiver") {
+        await apiFetch(`/caregivers/${itemToDelete.id}`, { method: 'DELETE' });
+        const updated = await apiFetch<Caregiver[]>(`/caregivers`);
+        setCaregivers((updated || []).map(c => ({ ...c, addedBy: currentUser?.id || "" })));
+        toast.success("Cuidador removido com sucesso");
+      } else {
+        await apiFetch(`/representatives/${itemToDelete.id}`, { method: 'DELETE' });
+        const updated = await apiFetch<Representative[]>(`/representatives`);
+        setRepresentatives(updated || []);
+        toast.success("Representante removido com sucesso");
+      }
+    } catch (e) {
+      toast.error("Erro ao excluir");
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
-
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
   };
 
   const openDeleteDialog = (type: "caregiver" | "representative", id: string) => {
@@ -357,7 +361,7 @@ export function ProfilePage() {
                   Adicionar Cuidador
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-[#16808c]">Novo Cuidador</DialogTitle>
                   <DialogDescription>
@@ -375,7 +379,7 @@ export function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="cg-email">E-mail *</Label>
+                    <Label htmlFor="cg-email">E-mail (opcional)</Label>
                     <Input
                       id="cg-email"
                       type="email"
@@ -385,49 +389,123 @@ export function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="cg-phone">Telefone</Label>
+                    <Label htmlFor="cg-phone">WhatsApp *</Label>
                     <Input
                       id="cg-phone"
                       type="tel"
                       value={newCaregiver.phone}
                       onChange={(e) => setNewCaregiver({ ...newCaregiver, phone: e.target.value })}
                       placeholder="(00) 00000-0000"
+                      required
                     />
                   </div>
                   <div>
                     <Label>Pacientes Atribuídos</Label>
-                    <div className="space-y-2 mt-2">
-                      {patients.length === 0 ? (
-                        <p className="text-sm text-gray-500">Nenhum paciente cadastrado</p>
-                      ) : (
-                        patients.map(patient => (
-                          <div key={patient.id} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              id={`patient-${patient.id}`}
-                              checked={newCaregiver.patients.includes(patient.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setNewCaregiver({
-                                    ...newCaregiver,
-                                    patients: [...newCaregiver.patients, patient.id]
-                                  });
-                                } else {
-                                  setNewCaregiver({
-                                    ...newCaregiver,
-                                    patients: newCaregiver.patients.filter(id => id !== patient.id)
-                                  });
-                                }
-                              }}
-                              className="rounded border-gray-300"
-                            />
-                            <label htmlFor={`patient-${patient.id}`} className="text-sm cursor-pointer">
-                              {patient.name}
-                            </label>
+                    {patients.length === 0 ? (
+                      <p className="text-sm text-gray-500 mt-2">Nenhum paciente cadastrado</p>
+                    ) : (
+                      <>
+                        {/* Campo de busca */}
+                        <div className="relative mt-2 mb-3">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Buscar pacientes..."
+                            value={patientSearchTerm}
+                            onChange={(e) => setPatientSearchTerm(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                        
+                        {/* Lista de pacientes selecionados (chips) */}
+                        {newCaregiver.patients.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b">
+                            {newCaregiver.patients.map(patientId => {
+                              const patient = patients.find(p => p.id === patientId);
+                              if (!patient) return null;
+                              return (
+                                <Badge key={patientId} variant="secondary" className="flex items-center gap-1">
+                                  {patient.name}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setNewCaregiver({
+                                        ...newCaregiver,
+                                        patients: newCaregiver.patients.filter(id => id !== patientId)
+                                      });
+                                    }}
+                                    className="ml-1 hover:text-red-500"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              );
+                            })}
                           </div>
-                        ))
-                      )}
-                    </div>
+                        )}
+                        
+                        {/* Lista de pacientes com scroll */}
+                        <div className="border rounded-md max-h-60 overflow-y-auto">
+                          <div className="p-2 space-y-1">
+                            {patients
+                              .filter(patient => 
+                                patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase())
+                              )
+                              .map(patient => {
+                                const isSelected = newCaregiver.patients.includes(patient.id);
+                                return (
+                                  <div
+                                    key={patient.id}
+                                    className={`flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer transition-colors ${
+                                      isSelected ? 'bg-[#16808c]/10 border border-[#16808c]' : ''
+                                    }`}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setNewCaregiver({
+                                          ...newCaregiver,
+                                          patients: newCaregiver.patients.filter(id => id !== patient.id)
+                                        });
+                                      } else {
+                                        setNewCaregiver({
+                                          ...newCaregiver,
+                                          patients: [...newCaregiver.patients, patient.id]
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => {}}
+                                      className="rounded border-gray-300 cursor-pointer"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <label className="text-sm font-medium cursor-pointer block">
+                                        {patient.name}
+                                      </label>
+                                      <span className="text-xs text-gray-500">
+                                        {patient.age} anos • {patient.careType}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            {patients.filter(patient => 
+                              patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase())
+                            ).length === 0 && (
+                              <p className="text-sm text-gray-500 text-center py-4">
+                                Nenhum paciente encontrado
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {newCaregiver.patients.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-2">
+                            {newCaregiver.patients.length} paciente{newCaregiver.patients.length > 1 ? 's' : ''} selecionado{newCaregiver.patients.length > 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
                 <DialogFooter>
@@ -461,7 +539,7 @@ export function ProfilePage() {
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-[#16808c]">{caregiver.name}</h4>
-                        <p className="text-sm text-gray-600">{caregiver.email}</p>
+                        {caregiver.email && <p className="text-sm text-gray-600">{caregiver.email}</p>}
                         {caregiver.phone && <p className="text-sm text-gray-600">{caregiver.phone}</p>}
                       </div>
                       <Button
