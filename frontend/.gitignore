@@ -1,0 +1,159 @@
+# =======================================
+# 🌐 FRONTEND / REACT + TYPESCRIPT
+# =======================================
+
+# dependencies
+node_modules/
+bower_components/
+
+# build outputs
+build/
+dist/
+out/
+.next/
+.cache/
+coverage/
+storybook-static/
+
+# environment files
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# temporary files
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+
+# lock files (optional, uncomment if using only one manager)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# test coverage
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Next.js / Gatsby / Remix
+.next/
+out/
+.cache/
+public/static/
+
+# Svelte / Vite / CRA
+.vite/
+vite.config.ts.timestamp*
+*.vite.config.js.timestamp*
+
+# react native / expo (if applicable)
+.expo/
+.expo-shared/
+
+# ESLint / Prettier / Lint caches
+.eslintcache
+.prettiercache
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# IDEs
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# =======================================
+# ⚙️ BACKEND / NODE.JS + TYPESCRIPT
+# =======================================
+
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+build/
+out/
+
+# TypeScript
+*.tsbuildinfo
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# environment variables
+.env
+.env.*
+!.env.example
+
+# caches
+.cache/
+.tmp/
+temp/
+tmp/
+
+# coverage
+coverage/
+.nyc_output/
+
+# local databases
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# PM2 logs
+pids/
+pm2.log
+pm2.pid
+
+# Docker / deployment
+.docker/
+docker-compose.override.yml
+Dockerfile.local
+Dockerfile.dev
+
+# misc
+*.tgz
+*.bak
+*.swp
+*.swo
+*.orig
+
+# =======================================
+# 📦 MONOREPO (Turborepo / NX / Lerna)
+# =======================================
+.turbo/
+nx/
+lerna-debug.log
+.cache/
+tmp/
+node_modules/
