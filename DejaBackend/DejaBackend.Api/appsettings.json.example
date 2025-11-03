@@ -1,0 +1,18 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=tcp:YOUR_SERVER.database.windows.net,1433;Database=DejaDB;User ID=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=true;"
+  },
+  "Jwt": {
+    "Key": "YOUR_SECRET_KEY_HERE_MUST_BE_AT_LEAST_32_CHARACTERS_LONG",
+    "Issuer": "DejaBackend",
+    "Audience": "DejaFrontend"
+  }
+}
+

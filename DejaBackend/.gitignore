@@ -55,6 +55,7 @@ package-lock.json
 *.db-shm
 *.db-wal
 *.sqlite
+appsettings.json
 appsettings.*.local.json
 appsettings.local.json
 .env
