@@ -17,9 +17,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // 1. DbContext and SQLite
+        // 1. DbContext - SQL Server (Azure)
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -39,6 +39,7 @@ import { Separator } from "./ui/separator";
 import { toast } from "sonner@2.0.3";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
+import { apiFetch } from "@/lib/api";
 
 interface Caregiver {
   id: string;
@@ -86,99 +87,98 @@ export function ProfilePage() {
     email: ""
   });
 
-  // Mock data - Em produção viria do backend
-  const [caregivers, setCaregivers] = useState<Caregiver[]>([
-    {
-      id: "cg1",
-      name: "Ana Paula Silva",
-      email: "ana.paula@email.com",
-      phone: "(11) 98765-4321",
-      patients: ["1", "2"],
-      addedBy: currentUser?.id || "",
-      addedAt: "2025-01-15",
-      status: "active"
-    },
-    {
-      id: "cg2",
-      name: "Carlos Alberto",
-      email: "carlos@email.com",
-      phone: "(11) 91234-5678",
-      patients: ["3"],
-      addedBy: currentUser?.id || "",
-      addedAt: "2025-02-10",
-      status: "active"
-    }
-  ]);
-
+  const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [representatives, setRepresentatives] = useState<Representative[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [cgs, reps] = await Promise.all([
+          apiFetch<Caregiver[]>(`/caregivers`),
+          apiFetch<Representative[]>(`/representatives`),
+        ]);
+        setCaregivers((cgs || []).map(c => ({
+          ...c,
+          addedBy: currentUser?.id || "",
+        })));
+        setRepresentatives(reps || []);
+      } catch (e) {
+        // silent; page can still work
+      }
+    };
+    load();
+  }, [currentUser?.id]);
 
   const handleEditProfile = () => {
     toast.success("Perfil atualizado com sucesso!");
     setIsEditProfileOpen(false);
   };
 
-  const handleAddCaregiver = () => {
+  const handleAddCaregiver = async () => {
     if (!newCaregiver.name || !newCaregiver.email) {
       toast.error("Preencha os campos obrigatórios");
       return;
     }
-
-    const caregiver: Caregiver = {
-      id: `cg_${Date.now()}`,
-      name: newCaregiver.name,
-      email: newCaregiver.email,
-      phone: newCaregiver.phone,
-      patients: newCaregiver.patients,
-      addedBy: currentUser?.id || "",
-      addedAt: new Date().toISOString().split('T')[0],
-      status: "active"
-    };
-
-    setCaregivers([...caregivers, caregiver]);
-    toast.success("Cuidador adicionado com sucesso!");
-    setIsAddCaregiverOpen(false);
-    setNewCaregiver({ name: "", email: "", phone: "", patients: [] });
+    try {
+      await apiFetch(`/caregivers`, {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newCaregiver.name,
+          email: newCaregiver.email,
+          phone: newCaregiver.phone,
+          patients: newCaregiver.patients,
+        }),
+      });
+      const updated = await apiFetch<Caregiver[]>(`/caregivers`);
+      setCaregivers((updated || []).map(c => ({ ...c, addedBy: currentUser?.id || "" })));
+      toast.success("Cuidador adicionado com sucesso!");
+      setIsAddCaregiverOpen(false);
+      setNewCaregiver({ name: "", email: "", phone: "", patients: [] });
+    } catch (e) {
+      toast.error("Erro ao adicionar cuidador");
+    }
   };
 
-  const handleAddRepresentative = () => {
+  const handleAddRepresentative = async () => {
     if (!newRepresentative.email) {
       toast.error("Digite o email do representante");
       return;
     }
-
-    // Verificar se já existe
-    if (representatives.some(r => r.email === newRepresentative.email)) {
-      toast.error("Este representante já foi adicionado");
-      return;
+    try {
+      await apiFetch(`/representatives`, {
+        method: 'POST',
+        body: JSON.stringify({ email: newRepresentative.email }),
+      });
+      const updated = await apiFetch<Representative[]>(`/representatives`);
+      setRepresentatives(updated || []);
+      toast.success("Convite enviado ao representante!");
+      setIsAddRepresentativeOpen(false);
+      setNewRepresentative({ email: "" });
+    } catch (e) {
+      toast.error("Erro ao adicionar representante");
     }
-
-    const representative: Representative = {
-      id: `rep_${Date.now()}`,
-      name: "Representante Convidado", // Seria obtido do backend
-      email: newRepresentative.email,
-      addedAt: new Date().toISOString().split('T')[0],
-      status: "active"
-    };
-
-    setRepresentatives([...representatives, representative]);
-    toast.success("Convite enviado ao representante!");
-    setIsAddRepresentativeOpen(false);
-    setNewRepresentative({ email: "" });
   };
 
-  const handleDeleteItem = () => {
+  const handleDeleteItem = async () => {
     if (!itemToDelete) return;
-
-    if (itemToDelete.type === "caregiver") {
-      setCaregivers(caregivers.filter(c => c.id !== itemToDelete.id));
-      toast.success("Cuidador removido com sucesso");
-    } else {
-      setRepresentatives(representatives.filter(r => r.id !== itemToDelete.id));
-      toast.success("Representante removido com sucesso");
+    try {
+      if (itemToDelete.type === "caregiver") {
+        await apiFetch(`/caregivers/${itemToDelete.id}`, { method: 'DELETE' });
+        const updated = await apiFetch<Caregiver[]>(`/caregivers`);
+        setCaregivers((updated || []).map(c => ({ ...c, addedBy: currentUser?.id || "" })));
+        toast.success("Cuidador removido com sucesso");
+      } else {
+        await apiFetch(`/representatives/${itemToDelete.id}`, { method: 'DELETE' });
+        const updated = await apiFetch<Representative[]>(`/representatives`);
+        setRepresentatives(updated || []);
+        toast.success("Representante removido com sucesso");
+      }
+    } catch (e) {
+      toast.error("Erro ao excluir");
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
-
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
   };
 
   const openDeleteDialog = (type: "caregiver" | "representative", id: string) => {
