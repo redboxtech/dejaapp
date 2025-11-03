@@ -41,13 +41,12 @@ public class MedicationsController : ControllerBase
             var medicationId = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetMedications), new { id = medicationId }, medicationId);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while adding the medication." });
         }
     }
@@ -73,13 +72,12 @@ public class MedicationsController : ControllerBase
             }
             return Ok(new { message = "Medication updated successfully." });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while updating the medication." });
         }
     }
@@ -100,13 +98,12 @@ public class MedicationsController : ControllerBase
             }
             return NoContent();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while deleting the medication." });
         }
     }

@@ -41,13 +41,12 @@ public class ReplenishmentController : ControllerBase
             var requestId = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetRequests), new { id = requestId }, requestId);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while creating the request." });
         }
     }
@@ -73,13 +72,12 @@ public class ReplenishmentController : ControllerBase
             }
             return Ok(new { message = "Request approved and stock updated." });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while approving the request." });
         }
     }
@@ -101,13 +99,12 @@ public class ReplenishmentController : ControllerBase
             }
             return Ok(new { message = "Request rejected." });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while rejecting the request." });
         }
     }

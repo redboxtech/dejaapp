@@ -12,6 +12,8 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     public DbSet<Medication> Medications { get; set; }
     public DbSet<StockMovement> StockMovements { get; set; }
     public DbSet<ReplenishmentRequest> ReplenishmentRequests { get; set; }
+    public DbSet<Caregiver> Caregivers { get; set; }
+    public DbSet<Representative> Representatives { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -56,8 +58,8 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                     v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
                 );
             
-            // Relationship with Patient
-            entity.HasOne<Patient>()
+            // Relationship with Patient (bind explicitly to navigation to avoid shadow FK like PatientId1)
+            entity.HasOne(m => m.Patient)
                 .WithMany(p => p.Medications)
                 .HasForeignKey(m => m.PatientId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -85,6 +87,23 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 .WithMany()
                 .HasForeignKey(r => r.MedicationId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Caregiver entity
+        builder.Entity<Caregiver>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Patients)
+                .HasConversion(
+                    v => string.Join(',', v),
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList()
+                );
+        });
+
+        // Configure Representative entity
+        builder.Entity<Representative>(entity =>
+        {
+            entity.HasKey(r => r.Id);
         });
     }
 }

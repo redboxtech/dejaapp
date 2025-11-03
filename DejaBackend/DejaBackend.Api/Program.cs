@@ -1,7 +1,9 @@
 using DejaBackend.Application;
 using DejaBackend.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +24,7 @@ builder.Services.AddSwaggerGen(c =>
     var securityScheme = new OpenApiSecurityScheme
     {
         Name = "JWT Authentication",
-        Description = "Enter your JWT token in this format: Bearer YOUR_TOKEN",
+        Description = "Enter only your JWT token (without the 'Bearer ' prefix)",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
@@ -69,5 +71,35 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Serve frontend (Vite build) in production from ../frontend/build
+var frontendBuildPath = Path.Combine(app.Environment.ContentRootPath, "..", "frontend", "build");
+if (Directory.Exists(frontendBuildPath))
+{
+    var fileProvider = new PhysicalFileProvider(frontendBuildPath);
+
+    app.UseDefaultFiles(new DefaultFilesOptions
+    {
+        FileProvider = fileProvider,
+        DefaultFileNames = new List<string> { "index.html" }
+    });
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = fileProvider,
+        RequestPath = ""
+    });
+
+    // SPA fallback for non-API routes
+    app.Use(async (context, next) =>
+    {
+        if (!context.Request.Path.StartsWithSegments("/api") &&
+            !Path.HasExtension(context.Request.Path.Value))
+        {
+            context.Request.Path = "/index.html";
+        }
+        await next();
+    });
+}
 
 app.Run();

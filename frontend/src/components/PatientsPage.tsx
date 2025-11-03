@@ -550,8 +550,30 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Calendar className="h-4 w-4 flex-shrink-0" />
-                    <span className="truncate">{patient.lastUpdate}</span>
+                    <span className="truncate">
+                      {patient.createdAt 
+                        ? new Date(patient.createdAt).toLocaleString('pt-BR', { 
+                            day: '2-digit', 
+                            month: '2-digit', 
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : patient.lastUpdate}
+                    </span>
                   </div>
+                </div>
+                
+                {/* Data de Aniversário - Mobile */}
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">
+                    <span className="font-medium">Aniversário:</span> {new Date(patient.birthDate).toLocaleDateString('pt-BR', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      year: 'numeric'
+                    })}
+                  </span>
                 </div>
 
                 {/* Observações Mobile */}
@@ -633,7 +655,30 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{patient.lastUpdate}</span>
+                      <span className="truncate">
+                        {patient.createdAt 
+                          ? new Date(patient.createdAt).toLocaleString('pt-BR', { 
+                              day: '2-digit', 
+                              month: '2-digit', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          : patient.lastUpdate}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">
+                        <span className="font-medium">Aniversário:</span> {new Date(patient.birthDate).toLocaleDateString('pt-BR', { 
+                          day: '2-digit', 
+                          month: '2-digit', 
+                          year: 'numeric'
+                        })}
+                      </span>
                     </div>
                   </div>
 

@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
 import { useAuth } from "./AuthContext";
+import { apiFetch } from "../lib/api";
 
 // Types
 export type MedicationUnit = "comprimido" | "ml" | "gotas" | "mg" | "g" | "aplicacao" | "inalacao";
@@ -55,6 +56,7 @@ export interface Patient {
   observations: string;
   ownerId: string; // ID do representante que cadastrou
   sharedWith: string[]; // IDs de outros representantes que têm acesso
+  createdAt: string; // Data e hora de cadastro (ISO string)
 }
 
 export interface StockItem {
@@ -130,7 +132,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Carregar dados do usuário atual quando ele faz login
   useEffect(() => {
     if (currentUser) {
-      loadUserData(currentUser.id);
+      loadFromApi();
     } else {
       // Limpar dados quando faz logout
       setPatients([]);
@@ -140,67 +142,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [currentUser]);
 
-  const loadUserData = (userId: string) => {
-    // Carregar pacientes do usuário
-    const userPatients = JSON.parse(localStorage.getItem(`deja_patients_${userId}`) || "[]");
-    
-    // Carregar também pacientes compartilhados com este usuário
-    const allUsers = JSON.parse(localStorage.getItem("deja_users") || "[]");
-    const sharedPatients: Patient[] = [];
-    
-    allUsers.forEach((user: any) => {
-      if (user.id !== userId) {
-        const otherUserPatients = JSON.parse(localStorage.getItem(`deja_patients_${user.id}`) || "[]");
-        otherUserPatients.forEach((patient: Patient) => {
-          if (patient.sharedWith && patient.sharedWith.includes(userId)) {
-            sharedPatients.push(patient);
-          }
-        });
-      }
-    });
-
-    const allPatients = [...userPatients, ...sharedPatients];
-    setPatients(allPatients);
-
-    // Carregar medicamentos
-    const userMedications = JSON.parse(localStorage.getItem(`deja_medications_${userId}`) || "[]");
-    setMedications(userMedications);
-
-    // Carregar estoques
-    const userStocks = JSON.parse(localStorage.getItem(`deja_stocks_${userId}`) || "[]");
-    setStockItems(userStocks);
-
-    // Carregar solicitações
-    const userRequests = JSON.parse(localStorage.getItem(`deja_requests_${userId}`) || "[]");
-    setReplenishmentRequests(userRequests);
+  const loadFromApi = async () => {
+    try {
+      const [patientsRes, medicationsRes, requestsRes, stockRes] = await Promise.all([
+        apiFetch<Patient[]>(`/patients`),
+        apiFetch<Medication[]>(`/medications`),
+        apiFetch<ReplenishmentRequest[]>(`/replenishment`),
+        apiFetch<StockItem[]>(`/stock`),
+      ]);
+      setPatients(patientsRes || []);
+      setMedications(medicationsRes || []);
+      setReplenishmentRequests(requestsRes || []);
+      setStockItems(stockRes || []);
+    } catch (e) {
+      console.error('Erro ao carregar dados da API', e);
+    }
   };
 
-  // Salvar dados sempre que mudarem
-  useEffect(() => {
-    if (currentUser) {
-      // Salvar apenas os pacientes que o usuário criou (não os compartilhados)
-      const ownPatients = patients.filter(p => p.ownerId === currentUser.id);
-      localStorage.setItem(`deja_patients_${currentUser.id}`, JSON.stringify(ownPatients));
-    }
-  }, [patients, currentUser]);
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(`deja_medications_${currentUser.id}`, JSON.stringify(medications));
-    }
-  }, [medications, currentUser]);
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(`deja_stocks_${currentUser.id}`, JSON.stringify(stockItems));
-    }
-  }, [stockItems, currentUser]);
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(`deja_requests_${currentUser.id}`, JSON.stringify(replenishmentRequests));
-    }
-  }, [replenishmentRequests, currentUser]);
+  // Removido: persistência em localStorage substituída por API
 
   const getMedicationsByPatient = useMemo(() => {
     return (patientId: string) => medications.filter(m => m.patientId === patientId);
@@ -210,69 +169,62 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return (medicationId: string) => stockItems.find(s => s.medicationId === medicationId);
   }, [stockItems]);
 
-  const addPatient = (patient: Omit<Patient, "id" | "ownerId" | "sharedWith">) => {
-    if (!currentUser) return;
-
-    const newPatient: Patient = { 
-      ...patient, 
-      id: `patient_${Date.now()}`,
-      ownerId: currentUser.id,
-      sharedWith: []
-    };
-    setPatients(prev => [...prev, newPatient]);
+  const addPatient = async (patient: Omit<Patient, "id" | "ownerId" | "sharedWith">) => {
+    try {
+      // Mapear para AddPatientCommand
+      const careTypeMap: Record<string, number> = { Domiciliar: 0, Institucional: 1 };
+      const body = {
+        name: patient.name,
+        birthDate: patient.birthDate, // "yyyy-MM-dd"
+        careType: careTypeMap[patient.careType] ?? 0,
+        observations: patient.observations ?? "",
+      };
+      await apiFetch<string>(`/patients`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao adicionar paciente', e);
+    }
   };
 
-  const updatePatient = (id: string, patient: Partial<Patient>) => {
-    setPatients(prev => prev.map(p => p.id === id ? { ...p, ...patient } : p));
+  const updatePatient = async (id: string, patient: Partial<Patient>) => {
+    try {
+      const careTypeMap: Record<string, number> = { Domiciliar: 0, Institucional: 1 };
+      const body = {
+        id,
+        name: patient.name,
+        birthDate: patient.birthDate, // "yyyy-MM-dd"
+        careType: patient.careType ? careTypeMap[patient.careType] ?? 0 : undefined,
+        observations: patient.observations,
+      };
+      await apiFetch(`/patients/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao atualizar paciente', e);
+    }
   };
 
-  const deletePatient = (id: string) => {
-    setPatients(prev => prev.filter(p => p.id !== id));
-    // Deletar também medicamentos e estoques relacionados
-    setMedications(prev => prev.filter(m => m.patientId !== id));
-    setStockItems(prev => prev.filter(s => {
-      const med = medications.find(m => m.id === s.medicationId);
-      return med?.patientId !== id;
-    }));
+  const deletePatient = async (id: string) => {
+    try {
+      await apiFetch(`/patients/${id}`, { method: 'DELETE' });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao deletar paciente', e);
+    }
   };
 
   const sharePatientWith = async (patientId: string, representativeEmail: string): Promise<boolean> => {
-    if (!currentUser) return false;
-
     try {
-      // Encontrar o representante pelo email
-      const users = JSON.parse(localStorage.getItem("deja_users") || "[]");
-      const targetUser = users.find((u: any) => u.email === representativeEmail);
-
-      if (!targetUser) {
-        throw new Error("Representante não encontrado");
-      }
-
-      if (targetUser.id === currentUser.id) {
-        throw new Error("Você não pode compartilhar com você mesmo");
-      }
-
-      // Atualizar o paciente para incluir o novo representante
-      const patient = patients.find(p => p.id === patientId);
-      if (!patient) {
-        throw new Error("Paciente não encontrado");
-      }
-
-      if (patient.ownerId !== currentUser.id) {
-        throw new Error("Você não tem permissão para compartilhar este paciente");
-      }
-
-      if (patient.sharedWith.includes(targetUser.id)) {
-        throw new Error("Este paciente já está compartilhado com este representante");
-      }
-
-      const updatedPatient = {
-        ...patient,
-        sharedWith: [...patient.sharedWith, targetUser.id]
-      };
-
-      setPatients(prev => prev.map(p => p.id === patientId ? updatedPatient : p));
-      
+      await apiFetch(`/patients/${patientId}/share`, {
+        method: 'POST',
+        body: JSON.stringify({ patientId, representativeEmail }),
+      });
+      await loadFromApi();
       return true;
     } catch (error) {
       console.error("Erro ao compartilhar paciente:", error);
@@ -280,104 +232,119 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addMedication = (medication: Omit<Medication, "id" | "ownerId">) => {
-    if (!currentUser) return;
-
-    const newMedication: Medication = { 
-      ...medication, 
-      id: `med_${Date.now()}`,
-      ownerId: currentUser.id
-    };
-    setMedications(prev => [...prev, newMedication]);
-    
-    // Criar entrada de estoque inicial
-    const newStock: StockItem = {
-      id: `stock_${Date.now()}`,
-      medication: `${medication.name} ${medication.dosage}${medication.unit}`,
-      medicationId: newMedication.id,
-      patient: medication.patient,
-      current: medication.currentStock,
-      dailyConsumption: medication.dailyConsumption,
-      daysLeft: medication.daysLeft,
-      estimatedEndDate: new Date(Date.now() + medication.daysLeft * 86400000).toISOString().split('T')[0],
-      boxQuantity: medication.boxQuantity,
-      unit: medication.unit,
-      status: medication.status,
-      movements: [{
-        type: "in",
-        quantity: medication.currentStock,
-        date: new Date().toISOString().split('T')[0],
-        source: "Estoque inicial"
-      }],
-      ownerId: currentUser.id
-    };
-    setStockItems(prev => [...prev, newStock]);
-  };
-
-  const updateMedication = (id: string, medication: Partial<Medication>) => {
-    setMedications(prev => prev.map(m => m.id === id ? { ...m, ...medication } : m));
-  };
-
-  const deleteMedication = (id: string) => {
-    setMedications(prev => prev.filter(m => m.id !== id));
-    setStockItems(prev => prev.filter(s => s.medicationId !== id));
-  };
-
-  const addStockEntry = (medicationId: string, quantity: number, source: string) => {
-    setStockItems(prev => prev.map(item => {
-      if (item.medicationId === medicationId) {
-        const newCurrent = item.current + quantity;
-        const newDaysLeft = Math.floor(newCurrent / item.dailyConsumption);
-        const newEndDate = new Date(Date.now() + newDaysLeft * 86400000).toISOString().split('T')[0];
-        
-        return {
-          ...item,
-          current: newCurrent,
-          daysLeft: newDaysLeft,
-          estimatedEndDate: newEndDate,
-          status: newDaysLeft < 3 ? "critical" : newDaysLeft < 7 ? "warning" : "ok",
-          movements: [
-            { type: "in" as const, quantity, date: new Date().toISOString().split('T')[0], source },
-            ...item.movements
-          ]
-        };
-      }
-      return item;
-    }));
-
-    // Atualizar medicação também
-    setMedications(prev => prev.map(med => {
-      const stock = stockItems.find(s => s.medicationId === medicationId);
-      if (med.id === medicationId && stock) {
-        const newCurrent = stock.current + quantity;
-        const newDaysLeft = Math.floor(newCurrent / med.dailyConsumption);
-        return {
-          ...med,
-          currentStock: newCurrent,
-          daysLeft: newDaysLeft,
-          status: newDaysLeft < 3 ? "critical" : newDaysLeft < 7 ? "warning" : "ok"
-        };
-      }
-      return med;
-    }));
-  };
-
-  const approveReplenishment = (id: string, quantity: number) => {
-    const request = replenishmentRequests.find(r => r.id === id);
-    if (request) {
-      addStockEntry(request.medicationId, quantity, `Reposição aprovada - Req #${id}`);
-      setReplenishmentRequests(prev => prev.map(r => 
-        r.id === id 
-          ? { ...r, status: "completed" as const, completedDate: new Date().toISOString().split('T')[0], addedQuantity: quantity }
-          : r
-      ));
+  const addMedication = async (medication: Omit<Medication, "id" | "ownerId">) => {
+    try {
+      const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
+      const normalizedTimes = (medication.times || [])
+        .flatMap(t => (typeof t === 'string' ? t.split(/[;,]/) : [t]))
+        .map(t => String(t).trim())
+        .filter(Boolean);
+      const startDate = medication.treatmentStartDate && medication.treatmentStartDate.length > 0
+        ? medication.treatmentStartDate
+        : new Date().toISOString().split('T')[0];
+      const body = {
+        name: medication.name,
+        dosage: medication.dosage,
+        unit: medication.unit,
+        patientId: medication.patientId,
+        route: medication.route,
+        frequency: medication.frequency,
+        times: normalizedTimes,
+        treatmentType: treatmentTypeMap[medication.treatmentType] ?? 0,
+        treatmentStartDate: startDate,
+        treatmentEndDate: medication.treatmentEndDate || null,
+        hasTapering: medication.hasTapering,
+        currentStock: medication.currentStock,
+        dailyConsumption: medication.dailyConsumption,
+        boxQuantity: medication.boxQuantity,
+        instructions: medication.instructions || "",
+      };
+      await apiFetch(`/medications`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao adicionar medicação', e);
     }
   };
 
-  const rejectReplenishment = (id: string) => {
-    setReplenishmentRequests(prev => prev.map(r => 
-      r.id === id ? { ...r, status: "rejected" as const } : r
-    ));
+  const updateMedication = async (id: string, medication: Partial<Medication>) => {
+    try {
+      const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
+      const normalizedTimes = (medication.times || [])
+        .flatMap(t => (typeof t === 'string' ? t.split(/[;,]/) : [t]))
+        .map(t => String(t).trim())
+        .filter(Boolean);
+      const startDate = medication.treatmentStartDate && medication.treatmentStartDate.length > 0
+        ? medication.treatmentStartDate
+        : undefined;
+      const body = {
+        id,
+        name: medication.name,
+        dosage: medication.dosage,
+        unit: medication.unit,
+        route: medication.route,
+        frequency: medication.frequency,
+        times: normalizedTimes.length > 0 ? normalizedTimes : undefined,
+        treatmentType: medication.treatmentType ? treatmentTypeMap[medication.treatmentType] ?? 0 : undefined,
+        treatmentStartDate: startDate,
+        treatmentEndDate: medication.treatmentEndDate ?? null,
+        hasTapering: medication.hasTapering,
+        dailyConsumption: medication.dailyConsumption,
+        boxQuantity: medication.boxQuantity,
+        instructions: medication.instructions,
+      };
+      await apiFetch(`/medications/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao atualizar medicação', e);
+    }
+  };
+
+  const deleteMedication = async (id: string) => {
+    try {
+      await apiFetch(`/medications/${id}`, { method: 'DELETE' });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao deletar medicação', e);
+    }
+  };
+
+  const addStockEntry = async (medicationId: string, quantity: number, source: string) => {
+    try {
+      await apiFetch(`/stock/entry`, {
+        method: 'POST',
+        body: JSON.stringify({ medicationId, quantity, source }),
+      });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao adicionar entrada de estoque', e);
+    }
+  };
+
+  const approveReplenishment = async (id: string, quantity: number) => {
+    try {
+      await apiFetch(`/replenishment/${id}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({ requestId: id, quantityAdded: quantity }),
+      });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao aprovar reposição', e);
+    }
+  };
+
+  const rejectReplenishment = async (id: string) => {
+    try {
+      await apiFetch(`/replenishment/${id}/reject`, { method: 'POST' });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao rejeitar reposição', e);
+    }
   };
 
   const value = {
