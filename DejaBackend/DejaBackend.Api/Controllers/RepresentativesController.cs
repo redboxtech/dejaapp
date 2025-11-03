@@ -1,8 +1,9 @@
-using DejaBackend.Application.Interfaces;
-using DejaBackend.Domain.Entities;
+using DejaBackend.Application.Representatives.Commands.AddRepresentative;
+using DejaBackend.Application.Representatives.Commands.DeleteRepresentative;
+using DejaBackend.Application.Representatives.Queries.GetRepresentatives;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DejaBackend.Api.Controllers;
 
@@ -11,54 +12,71 @@ namespace DejaBackend.Api.Controllers;
 [Route("api/representatives")]
 public class RepresentativesController : ControllerBase
 {
-    private readonly IApplicationDbContext _db;
-    private readonly ICurrentUserService _currentUser;
+    private readonly IMediator _mediator;
 
-    public RepresentativesController(IApplicationDbContext db, ICurrentUserService currentUser)
+    public RepresentativesController(IMediator mediator)
     {
-        _db = db;
-        _currentUser = currentUser;
+        _mediator = mediator;
     }
 
-    public record RepresentativeDto(Guid Id, string Name, string Email, string AddedAt, string Status);
     public record CreateRepresentativeRequest(string Email);
 
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Get()
     {
-        if (!_currentUser.UserId.HasValue) return Unauthorized();
-        var ownerId = _currentUser.UserId.Value;
-        var list = await _db.Representatives.AsNoTracking()
-            .Where(r => r.OwnerId == ownerId)
-            .ToListAsync();
-        var dtos = list.Select(r => new RepresentativeDto(r.Id, r.Name, r.Email, r.AddedAt.ToString("yyyy-MM-dd"), r.Status.ToString().ToLower())).ToList();
-        return Ok(dtos);
+        var query = new GetRepresentativesQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] CreateRepresentativeRequest req)
     {
-        if (!_currentUser.UserId.HasValue) return Unauthorized();
-        var ownerId = _currentUser.UserId.Value;
-        // try find user by email for name
-        var existingUser = await _db.Users.FirstOrDefaultAsync(u => u.Email == req.Email);
-        var name = existingUser?.Name ?? "Representante Convidado";
-        var entity = new Representative(ownerId, name, req.Email);
-        _db.Representatives.Add(entity);
-        await _db.SaveChangesAsync(HttpContext.RequestAborted);
-        return CreatedAtAction(nameof(Get), new { id = entity.Id }, entity.Id);
+        try
+        {
+            var command = new AddRepresentativeCommand(req.Email);
+            var representativeId = await _mediator.Send(command);
+            return CreatedAtAction(nameof(Get), new { id = representativeId }, representativeId);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
+        }
+        catch (Exception)
+        {
+            return BadRequest(new { message = "An error occurred while adding the representative." });
+        }
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        if (!_currentUser.UserId.HasValue) return Unauthorized();
-        var ownerId = _currentUser.UserId.Value;
-        var entity = await _db.Representatives.FirstOrDefaultAsync(r => r.Id == id && r.OwnerId == ownerId);
-        if (entity == null) return NotFound();
-        _db.Representatives.Remove(entity);
-        await _db.SaveChangesAsync(HttpContext.RequestAborted);
-        return NoContent();
+        try
+        {
+            var command = new DeleteRepresentativeCommand(id);
+            var result = await _mediator.Send(command);
+            if (!result)
+            {
+                return NotFound(new { message = "Representative not found." });
+            }
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
+        }
+        catch (Exception)
+        {
+            return BadRequest(new { message = "An error occurred while deleting the representative." });
+        }
     }
 }
 

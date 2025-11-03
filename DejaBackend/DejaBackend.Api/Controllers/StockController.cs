@@ -1,9 +1,8 @@
-using DejaBackend.Application.Interfaces;
 using DejaBackend.Application.Stock.Commands.AddStockEntry;
+using DejaBackend.Application.Stock.Queries.GetStock;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DejaBackend.Api.Controllers;
 
@@ -13,14 +12,10 @@ namespace DejaBackend.Api.Controllers;
 public class StockController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IApplicationDbContext _db;
-    private readonly ICurrentUserService _currentUser;
 
-    public StockController(IMediator mediator, IApplicationDbContext db, ICurrentUserService currentUser)
+    public StockController(IMediator mediator)
     {
         _mediator = mediator;
-        _db = db;
-        _currentUser = currentUser;
     }
 
     [HttpGet]
@@ -28,41 +23,9 @@ public class StockController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetStock()
     {
-        if (!_currentUser.IsAuthenticated || _currentUser.UserId == null)
-        {
-            return Unauthorized();
-        }
-
-        var userId = _currentUser.UserId.Value;
-
-        var items = await _db.Medications
-            .AsNoTracking()
-            .Include(m => m.Patient)
-            .Include(m => m.Movements)
-            .Where(m => m.OwnerId == userId)
-            .Select(m => new
-            {
-                id = m.Id,
-                medication = m.Name + " " + m.Dosage + m.Unit,
-                medicationId = m.Id,
-                patient = m.Patient != null ? m.Patient.Name : string.Empty,
-                current = m.CurrentStock,
-                dailyConsumption = m.DailyConsumption,
-                daysLeft = m.DaysLeft,
-                estimatedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(m.DaysLeft)).ToString("yyyy-MM-dd"),
-                boxQuantity = m.BoxQuantity,
-                unit = m.Unit,
-                status = m.Status.ToString().ToLower(),
-                movements = m.Movements
-                    .OrderByDescending(x => x.Date)
-                    .Take(50)
-                    .Select(x => new { type = x.Type == DejaBackend.Domain.Enums.StockMovementType.In ? "in" : "out", quantity = x.Quantity, date = x.Date.ToString("yyyy-MM-dd"), source = x.Source })
-                    .ToList(),
-                ownerId = userId
-            })
-            .ToListAsync();
-
-        return Ok(items);
+        var query = new GetStockQuery();
+        var result = await _mediator.Send(query);
+        return Ok(result);
     }
 
     [HttpPost("entry")]
@@ -81,13 +44,12 @@ public class StockController : ControllerBase
             }
             return Ok(new { message = "Stock entry added successfully." });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while adding stock entry." });
         }
     }

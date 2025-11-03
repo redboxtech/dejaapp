@@ -54,7 +54,9 @@ public class GetPatientsQueryHandler : IRequestHandler<GetPatientsQuery, List<Pa
         var medicationsCount = medications.Count;
         var criticalAlerts = medications.Count(m => m.Status == Domain.Enums.StockStatus.Critical);
         var caregiversCount = patient.SharedWith.Count + 1; // Owner + SharedWith
-        var lastUpdate = "Just now"; // Simplification
+        
+        // Calculate last update based on creation date
+        var lastUpdate = CalculateLastUpdate(patient.CreatedAt);
 
         return new PatientDto(
             patient.Id,
@@ -68,7 +70,27 @@ public class GetPatientsQueryHandler : IRequestHandler<GetPatientsQuery, List<Pa
             criticalAlerts,
             patient.Observations,
             patient.OwnerId,
-            patient.SharedWith
+            patient.SharedWith,
+            patient.CreatedAt
         );
+    }
+
+    private string CalculateLastUpdate(DateTime createdAt)
+    {
+        var now = DateTime.UtcNow;
+        var diff = now - createdAt;
+
+        if (diff.TotalMinutes < 1)
+            return "Agora mesmo";
+        if (diff.TotalMinutes < 60)
+            return $"Há {Math.Floor(diff.TotalMinutes)} minuto(s)";
+        if (diff.TotalHours < 24)
+            return $"Há {Math.Floor(diff.TotalHours)} hora(s)";
+        if (diff.TotalDays < 30)
+            return $"Há {Math.Floor(diff.TotalDays)} dia(s)";
+        if (diff.TotalDays < 365)
+            return $"Há {Math.Floor(diff.TotalDays / 30)} mês(es)";
+        
+        return $"Há {Math.Floor(diff.TotalDays / 365)} ano(s)";
     }
 }

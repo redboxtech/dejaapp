@@ -56,6 +56,7 @@ export interface Patient {
   observations: string;
   ownerId: string; // ID do representante que cadastrou
   sharedWith: string[]; // IDs de outros representantes que têm acesso
+  createdAt: string; // Data e hora de cadastro (ISO string)
 }
 
 export interface StockItem {

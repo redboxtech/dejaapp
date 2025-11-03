@@ -10,7 +10,7 @@ public class Caregiver
 {
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
-    public string Email { get; private set; } = string.Empty;
+    public string? Email { get; private set; }
     public string Phone { get; private set; } = string.Empty;
     public List<Guid> Patients { get; private set; } = new();
     public Guid OwnerId { get; private set; }
@@ -19,8 +19,13 @@ public class Caregiver
 
     private Caregiver() { }
 
-    public Caregiver(string name, string email, string phone, IEnumerable<Guid> patients, Guid ownerId)
+    public Caregiver(string name, string? email, string phone, IEnumerable<Guid> patients, Guid ownerId)
     {
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            throw new ArgumentException("Phone is required.", nameof(phone));
+        }
+
         Id = Guid.NewGuid();
         Name = name;
         Email = email;
@@ -31,8 +36,13 @@ public class Caregiver
         Status = CaregiverStatus.Active;
     }
 
-    public void Update(string name, string email, string phone, IEnumerable<Guid> patients)
+    public void Update(string name, string? email, string phone, IEnumerable<Guid> patients)
     {
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            throw new ArgumentException("Phone is required.", nameof(phone));
+        }
+
         Name = name;
         Email = email;
         Phone = phone;
