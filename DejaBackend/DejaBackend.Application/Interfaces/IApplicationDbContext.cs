@@ -10,6 +10,8 @@ public interface IApplicationDbContext
     DbSet<StockMovement> StockMovements { get; }
     DbSet<ReplenishmentRequest> ReplenishmentRequests { get; }
     DbSet<User> Users { get; }
+    DbSet<Caregiver> Caregivers { get; }
+    DbSet<Representative> Representatives { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
