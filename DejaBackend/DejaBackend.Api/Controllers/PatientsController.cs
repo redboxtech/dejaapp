@@ -42,13 +42,12 @@ public class PatientsController : ControllerBase
             var patientId = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetPatients), new { id = patientId }, patientId);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while adding the patient." });
         }
     }
@@ -74,13 +73,12 @@ public class PatientsController : ControllerBase
             }
             return Ok(new { message = "Patient updated successfully." });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while updating the patient." });
         }
     }
@@ -101,13 +99,12 @@ public class PatientsController : ControllerBase
             }
             return NoContent();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log the exception
             return BadRequest(new { message = "An error occurred while deleting the patient." });
         }
     }
@@ -133,19 +130,16 @@ public class PatientsController : ControllerBase
             }
             return Ok(new { message = "Patient shared successfully." });
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized();
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            // Frontend expects specific messages for "Representative not found" and "You cannot share with yourself"
-            if (ex.Message.Contains("Representative not found") || ex.Message.Contains("You cannot share with yourself"))
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            
-            // Log the exception
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception)
+        {
             return BadRequest(new { message = "An error occurred while sharing the patient." });
         }
     }

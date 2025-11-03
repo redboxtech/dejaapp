@@ -13,6 +13,7 @@ public class Patient
     public Guid OwnerId { get; private set; }
     public List<Guid> SharedWith { get; private set; } = new();
     public ICollection<Medication> Medications { get; private set; } = new List<Medication>();
+    public DateTime CreatedAt { get; private set; }
 
     // EF Core constructor
     private Patient() { }
@@ -26,6 +27,7 @@ public class Patient
         CareType = careType;
         Observations = observations;
         OwnerId = ownerId;
+        CreatedAt = DateTime.UtcNow;
     }
 
     public void UpdateDetails(string name, DateOnly birthDate, CareType careType, string observations)

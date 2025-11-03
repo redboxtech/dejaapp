@@ -14,5 +14,6 @@ public record PatientDto(
     int CriticalAlerts, // Will be calculated in the handler
     string Observations,
     Guid OwnerId,
-    List<Guid> SharedWith
+    List<Guid> SharedWith,
+    DateTime CreatedAt
 );
