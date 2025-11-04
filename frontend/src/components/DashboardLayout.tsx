@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Logo } from "./Logo";
 import { Footer } from "./Footer";
@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { useAuth } from "./AuthContext";
+import { useData } from "./DataContext";
 import { formatDisplayName, getInitials } from "../lib/utils";
 
 interface DashboardLayoutProps {
@@ -37,6 +38,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, currentPage, onNavigate, onLogout, userName }: DashboardLayoutProps) {
   const { logout } = useAuth();
+  const { replenishmentRequests } = useData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -44,12 +46,22 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
     onLogout();
   };
 
+  // Calcular número de solicitações pendentes
+  const pendingRequestsCount = useMemo(() => {
+    return replenishmentRequests.filter(req => req.status === "pending").length;
+  }, [replenishmentRequests]);
+
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "patients", label: "Pacientes", icon: Users },
     { id: "medications", label: "Medicamentos", icon: Pill },
     { id: "stock", label: "Estoque", icon: Package },
-    { id: "replenishment", label: "Solicitações", icon: ShoppingCart, badge: 3 },
+    { 
+      id: "replenishment", 
+      label: "Solicitações", 
+      icon: ShoppingCart, 
+      badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined 
+    },
     { id: "alerts", label: "Alertas", icon: Bell },
     { id: "settings", label: "Configurações", icon: Settings },
   ];
@@ -100,8 +112,8 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
             >
               <item.icon className="h-5 w-5" />
               <span className="flex-1 text-left">{item.label}</span>
-              {item.badge && (
-                <span className="bg-[#a61f43] text-white text-xs px-2 py-0.5 rounded-full">
+              {item.badge !== undefined && item.badge > 0 && (
+                <span className="bg-[#a61f43] text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] flex items-center justify-center">
                   {item.badge}
                 </span>
               )}
