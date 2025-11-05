@@ -1,0 +1,98 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: deja-backend-api
+  DOTNET_VERSION: "8.0.x"
+  NODE_VERSION: "20.x"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Application
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Build Frontend
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://deja-backend-api.azurewebsites.net' }}
+
+      - name: Copy frontend build to backend
+        run: |
+          # O Vite está configurado para gerar em 'build' (vite.config.ts: outDir: 'build')
+          # O Program.cs serve os arquivos de ../frontend/build
+          # Verificar qual diretório foi gerado
+          if [ -d "frontend/build" ]; then
+            echo "Build encontrado em frontend/build"
+          elif [ -d "frontend/dist" ]; then
+            echo "Build encontrado em frontend/dist, copiando para frontend/build"
+            mkdir -p frontend/build
+            cp -r frontend/dist/* frontend/build/
+          else
+            echo "Erro: Diretório de build não encontrado!"
+            exit 1
+          fi
+
+          # Verificar se os arquivos foram copiados corretamente
+          if [ ! -f "frontend/build/index.html" ]; then
+            echo "Erro: index.html não encontrado em frontend/build!"
+            exit 1
+          fi
+
+          echo "Frontend build copiado com sucesso!"
+
+      # Build Backend
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore backend dependencies
+        working-directory: backend/DejaBackend.Api
+        run: dotnet restore
+
+      - name: Build backend application
+        working-directory: backend/DejaBackend.Api
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish backend application
+        working-directory: backend/DejaBackend.Api
+        run: dotnet publish --configuration Release --no-build --output ./publish
+
+      # Deploy to Azure
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./backend/DejaBackend.Api/publish
+
+      # Optional: Run database migrations
+      # - name: Run database migrations
+      #   run: |
+      #     dotnet tool install --global dotnet-ef
+      #     dotnet ef database update --project backend/DejaBackend.Infrastructure/DejaBackend.Infrastructure.csproj --startup-project backend/DejaBackend.Api/DejaBackend.Api.csproj
+      #   env:
+      #     ConnectionStrings__DefaultConnection: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -11,17 +11,77 @@ import {
   Package,
   AlertCircle,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  DollarSign,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useData } from "./DataContext";
+import { apiFetch } from "@/lib/api";
 
 interface DashboardProps {
   onNavigate: (page: string, id?: string) => void;
 }
 
+interface CaregiverSchedule {
+  id: string;
+  caregiverId: string;
+  caregiverName: string;
+  patientId: string;
+  patientName: string;
+  daysOfWeek: string[];
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+}
+
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { patients, medications, stockItems, replenishmentRequests } = useData();
+  const { patients, medications, stockItems, replenishmentRequests, monthlyExpenses } = useData();
+  const [schedules, setSchedules] = useState<CaregiverSchedule[]>([]);
+  const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const loadSchedules = async () => {
+      try {
+        const schedulesData = await apiFetch<CaregiverSchedule[]>(`/caregiver-schedules`);
+        setSchedules(schedulesData || []);
+      } catch (error) {
+        console.error("Erro ao carregar escalas:", error);
+      }
+    };
+    loadSchedules();
+  }, []);
+
+  const getCaregiverForPatientAndTime = (patientId: string, time: string): string | null => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Domingo, 1 = Segunda, etc.
+    
+    const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    const currentDayName = dayNames[dayOfWeek];
+
+    // Parse time (HH:mm format)
+    const [hours, minutes] = time.split(":").map(Number);
+    const medicationTime = hours * 60 + minutes;
+
+    const schedule = schedules.find(s => 
+      s.patientId === patientId &&
+      s.daysOfWeek.includes(currentDayName)
+    );
+
+    if (!schedule) return null;
+
+    const [startHours, startMinutes] = schedule.startTime.split(":").map(Number);
+    const [endHours, endMinutes] = schedule.endTime.split(":").map(Number);
+    const startTime = startHours * 60 + startMinutes;
+    const endTime = endHours * 60 + endMinutes;
+
+    if (medicationTime >= startTime && medicationTime <= endTime) {
+      return schedule.caregiverName;
+    }
+
+    return null;
+  };
 
   // Memoized computations para performance
   const { morningMeds, afternoonMeds, nightMeds, visibleSectionTitle, visibleItems } = useMemo(() => {
@@ -39,6 +99,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     const all = medications.flatMap(med =>
       med.times.map(time => ({
         patient: med.patient,
+        patientId: med.patientId,
         medication: `${med.name} ${med.dosage}${med.unit === "comprimido" ? "mg" : med.unit}`,
         time,
         status: "pending" as const,
@@ -101,27 +162,28 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       .slice(0, 3);
   }, [stockItems]);
 
+  const getUnitLabel = (unit: string) => {
+    const labels: Record<string, string> = {
+      comprimido: "comp",
+      capsula: "caps",
+      ml: "ml",
+      gotas: "gts",
+      mg: "mg",
+      g: "g",
+      aplicacao: "apl",
+      inalacao: "inal",
+      ampola: "amp",
+      xarope: "xar",
+      suspensao: "susp"
+    };
+    return labels[unit] || unit;
+  };
+
+  // TODO: Implementar quando tiver dados de receitas disponíveis
+  // As receitas vencendo serão buscadas diretamente da entidade Prescription
   const expiringPrescriptions = useMemo(() => {
-    const now = new Date();
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 86400000);
-    
-    return medications
-      .filter(med => {
-        const expiryDate = new Date(med.prescriptionExpiry);
-        return expiryDate <= thirtyDaysFromNow && expiryDate > now;
-      })
-      .map(med => {
-        const expiryDate = new Date(med.prescriptionExpiry);
-        const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / 86400000);
-        return {
-          medication: med.name,
-          patient: med.patient,
-          expiresIn: daysUntilExpiry,
-          type: med.prescriptionType
-        };
-      })
-      .sort((a, b) => a.expiresIn - b.expiresIn)
-      .slice(0, 3);
+    // Por enquanto retornar array vazio, será implementado quando tiver receitas
+    return [];
   }, [medications]);
 
   const stats = useMemo(() => ({
@@ -140,63 +202,80 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Pacientes Ativos
+      <div className="flex flex-row gap-3 w-full">
+        <Card className="p-4 flex-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
+            <CardTitle className="text-base font-medium text-[#16808c]">
+              Pacientes
             </CardTitle>
-            <Users className="h-4 w-4 text-[#16808c]" />
+            <Users className="h-5 w-5 text-[#16808c]" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#16808c]">{stats.totalPatients}</div>
+          <CardContent className="px-0 pb-0 pt-1">
+            <div className="text-xl font-bold text-[#16808c]">{stats.totalPatients}</div>
             <p className="text-xs text-gray-500 mt-1">
-              Sob sua responsabilidade
+              Ativos
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Medicamentos Ativos
+        <Card className="p-4 flex-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
+            <CardTitle className="text-base font-medium text-[#16808c]">
+              Medicamentos
             </CardTitle>
-            <Pill className="h-4 w-4 text-[#6cced9]" />
+            <Pill className="h-5 w-5 text-[#6cced9]" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#16808c]">{stats.totalMedications}</div>
+          <CardContent className="px-0 pb-0 pt-1">
+            <div className="text-xl font-bold text-[#16808c]">{stats.totalMedications}</div>
             <p className="text-xs text-gray-500 mt-1">
-              Entre todos os pacientes
+              Ativos
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              Estoques Críticos
+        <Card className="p-4 flex-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
+            <CardTitle className="text-base font-medium text-[#a61f43]">
+              Críticos
             </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-[#f2c36b]" />
+            <AlertTriangle className="h-5 w-5 text-[#a61f43]" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#f2c36b]">{stats.criticalAlerts}</div>
+          <CardContent className="px-0 pb-0 pt-1">
+            <div className="text-xl font-bold text-[#a61f43]">{stats.criticalAlerts}</div>
             <p className="text-xs text-gray-500 mt-1">
-              Requerem atenção
+              Estoques
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+        <Card className="p-4 flex-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
+            <CardTitle className="text-base font-medium text-[#16808c]">
               Solicitações
             </CardTitle>
-            <Clock className="h-4 w-4 text-[#a0bf80]" />
+            <Clock className="h-5 w-5 text-[#a0bf80]" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#16808c]">{stats.pendingRequests}</div>
+          <CardContent className="px-0 pb-0 pt-1">
+            <div className="text-xl font-bold text-[#16808c]">{stats.pendingRequests}</div>
             <p className="text-xs text-gray-500 mt-1">
-              Pendentes de aprovação
+              Pendentes
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="p-4 flex-1">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
+            <CardTitle className="text-base font-medium text-[#16808c]">
+              Gasto Mensal
+            </CardTitle>
+            <DollarSign className="h-5 w-5 text-[#a0bf80]" />
+          </CardHeader>
+          <CardContent className="px-0 pb-0 pt-1">
+            <div className="text-lg font-bold text-[#16808c]">
+              R$ {monthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Este mês
             </p>
           </CardContent>
         </Card>
@@ -271,21 +350,83 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <div className="text-sm text-gray-400">Sem horários neste período</div>
             ) : (
               <div className="space-y-3">
-                {visibleItems.map((med, idx) => (
-                  <div key={`v-${idx}`} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
-                      <Clock className="h-5 w-5 text-[#16808c]" />
+                {(() => {
+                  // Agrupar medicações por paciente
+                  const groupedByPatient = visibleItems.reduce((acc, med) => {
+                    if (!acc[med.patientId]) {
+                      acc[med.patientId] = {
+                        patientId: med.patientId,
+                        patientName: med.patient,
+                        medications: [],
+                        caregiver: null as string | null
+                      };
+                    }
+                    acc[med.patientId].medications.push(med);
+                    
+                    // Buscar cuidador responsável para este horário
+                    const caregiver = getCaregiverForPatientAndTime(med.patientId, med.time);
+                    if (caregiver && !acc[med.patientId].caregiver) {
+                      acc[med.patientId].caregiver = caregiver;
+                    }
+                    
+                    return acc;
+                  }, {} as Record<string, { patientId: string; patientName: string; medications: typeof visibleItems; caregiver: string | null }>);
+
+                  const patientGroups = Object.values(groupedByPatient);
+
+                  return patientGroups.map((group) => (
+                    <div key={group.patientId} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => {
+                          const newExpanded = new Set(expandedPatients);
+                          if (newExpanded.has(group.patientId)) {
+                            newExpanded.delete(group.patientId);
+                          } else {
+                            newExpanded.add(group.patientId);
+                          }
+                          setExpandedPatients(newExpanded);
+                        }}
+                        className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1 text-left">
+                          <Users className="h-5 w-5 text-[#16808c]" />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{group.patientName}</div>
+                            {group.caregiver && (
+                              <div className="text-xs text-gray-500">Cuidador: {group.caregiver}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {group.medications.length} medicação{group.medications.length > 1 ? "ões" : ""}
+                          </Badge>
+                          {expandedPatients.has(group.patientId) ? (
+                            <ChevronUp className="h-4 w-4 text-gray-400" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                          )}
+                        </div>
+                      </button>
+                      
+                      {expandedPatients.has(group.patientId) && (
+                        <div className="border-t border-gray-200 bg-gray-50">
+                          <div className="p-3 space-y-2">
+                            {group.medications.map((med, idx) => (
+                              <div key={`${group.patientId}-${idx}`} className="flex items-center gap-3 p-2 rounded bg-white">
+                                <Clock className="h-4 w-4 text-[#16808c] flex-shrink-0" />
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium">{med.medication}</div>
+                                </div>
+                                <div className="text-sm font-medium text-[#16808c]">{med.time}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{med.medication}</div>
-                      <div className="text-sm text-gray-500">{med.patient}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-[#16808c]">{med.time}</div>
-                      <Badge variant="outline" className="text-xs">Pendente</Badge>
-                    </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             )}
           </CardContent>
@@ -297,7 +438,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-[#f2c36b]" />
+              <AlertTriangle className="h-5 w-5 text-[#a61f43]" />
               <span className="text-[#16808c]">Estoques Críticos</span>
             </CardTitle>
             <CardDescription>
@@ -312,29 +453,37 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             ) : (
               <>
                 {criticalStocks.map((stock) => (
-                  <div key={stock.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{stock.medication}</div>
-                        <div className="text-sm text-gray-500">{stock.patient}</div>
+                  <div key={stock.id} className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <div className="space-y-3">
+                      <div className="font-semibold text-base text-gray-900">
+                        {stock.medication}
                       </div>
-                      <Badge variant="outline" className={
-                        stock.status === "critical" 
-                          ? "text-[#a61f43] border-[#a61f43]" 
-                          : "text-[#f2c36b] border-[#f2c36b]"
-                      }>
-                        {stock.daysLeft} dias
-                      </Badge>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Quantidade atual</span>
-                        <span className="font-medium">{stock.current} {stock.unit}</span>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Estoque Atual</div>
+                          <div className="text-sm font-bold text-[#16808c]">
+                            {stock.current} {getUnitLabel(stock.presentationForm || stock.unit || "comprimido")}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Dias Restantes</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-bold text-gray-900">
+                              {stock.daysLeft} dias
+                            </div>
+                            <Badge 
+                              variant="outline" 
+                              className={
+                                stock.status === "critical" 
+                                  ? "text-[#a61f43] border-[#a61f43] bg-[#a61f43]/10" 
+                                  : "text-[#f2c36b] border-[#f2c36b] bg-[#f2c36b]/10"
+                              }
+                            >
+                              {stock.status === "critical" ? "Crítico" : "Atenção"}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
-                      <Progress 
-                        value={(stock.current / stock.boxQuantity) * 100} 
-                        className="h-2"
-                      />
                     </div>
                   </div>
                 ))}

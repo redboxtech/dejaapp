@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -17,8 +17,11 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Separator } from "./ui/separator";
 import { toast } from "sonner@2.0.3";
+import { apiFetch } from "../lib/api";
+import { useAuth } from "./AuthContext";
 
 export function AlertsPage() {
+  const { currentUser } = useAuth();
   const [alertSettings, setAlertSettings] = useState({
     medicationDelay: {
       enabled: true,
@@ -58,8 +61,83 @@ export function AlertsPage() {
     { id: "4", type: "Simple", name: "Receita Simples", daysBeforeExpiry: 7 },
   ]);
 
-  const handleSave = () => {
-    toast.success("Configurações de alertas salvas com sucesso!");
+  // Carregar configurações ao montar o componente
+  useEffect(() => {
+    if (currentUser) {
+      loadAlertSettings();
+    }
+  }, [currentUser]);
+
+  const loadAlertSettings = async () => {
+    try {
+      const settings = await apiFetch<any>(`/alerts/settings`);
+      if (settings) {
+        setAlertSettings({
+          medicationDelay: {
+            enabled: settings.medicationDelayEnabled ?? true,
+            delayMinutes: settings.medicationDelayMinutes ?? 30,
+            channels: settings.medicationDelayChannels ?? ["push", "email"]
+          },
+          lowStock: {
+            enabled: settings.lowStockEnabled ?? true,
+            threshold: settings.lowStockThreshold ?? 7,
+            channels: settings.lowStockChannels ?? ["push", "email"]
+          },
+          criticalStock: {
+            enabled: settings.criticalStockEnabled ?? true,
+            threshold: settings.criticalStockThreshold ?? 3,
+            channels: settings.criticalStockChannels ?? ["push", "email", "whatsapp"]
+          },
+          prescriptionExpiry: {
+            enabled: settings.prescriptionExpiryEnabled ?? true,
+            defaultDays: settings.prescriptionExpiryDefaultDays ?? 14,
+            channels: settings.prescriptionExpiryChannels ?? ["push", "email"]
+          },
+          replenishmentRequest: {
+            enabled: settings.replenishmentRequestEnabled ?? true,
+            channels: settings.replenishmentRequestChannels ?? ["push", "email"]
+          },
+          quietHours: {
+            enabled: settings.quietHoursEnabled ?? true,
+            startTime: settings.quietHoursStartTime ?? "22:00",
+            endTime: settings.quietHoursEndTime ?? "07:00"
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Erro ao carregar configurações de alertas', e);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      await apiFetch(`/alerts/settings`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          medicationDelayEnabled: alertSettings.medicationDelay.enabled,
+          medicationDelayMinutes: alertSettings.medicationDelay.delayMinutes,
+          medicationDelayChannels: alertSettings.medicationDelay.channels,
+          lowStockEnabled: alertSettings.lowStock.enabled,
+          lowStockThreshold: alertSettings.lowStock.threshold,
+          lowStockChannels: alertSettings.lowStock.channels,
+          criticalStockEnabled: alertSettings.criticalStock.enabled,
+          criticalStockThreshold: alertSettings.criticalStock.threshold,
+          criticalStockChannels: alertSettings.criticalStock.channels,
+          prescriptionExpiryEnabled: alertSettings.prescriptionExpiry.enabled,
+          prescriptionExpiryDefaultDays: alertSettings.prescriptionExpiry.defaultDays,
+          prescriptionExpiryChannels: alertSettings.prescriptionExpiry.channels,
+          replenishmentRequestEnabled: alertSettings.replenishmentRequest.enabled,
+          replenishmentRequestChannels: alertSettings.replenishmentRequest.channels,
+          quietHoursEnabled: alertSettings.quietHours.enabled,
+          quietHoursStartTime: alertSettings.quietHours.startTime,
+          quietHoursEndTime: alertSettings.quietHours.endTime
+        }),
+      });
+      toast.success("Configurações de alertas salvas com sucesso!");
+    } catch (e) {
+      console.error('Erro ao salvar configurações de alertas', e);
+      toast.error("Erro ao salvar configurações de alertas.");
+    }
   };
 
   const toggleChannel = (alertType: string, channel: string) => {

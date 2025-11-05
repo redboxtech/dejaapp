@@ -6,6 +6,7 @@ import {
   LayoutDashboard, 
   Users, 
   Pill, 
+  FileText,
   Package, 
   Bell, 
   ShoppingCart,
@@ -13,7 +14,8 @@ import {
   LogOut,
   Menu,
   X,
-  User as UserIcon
+  User as UserIcon,
+  Calendar
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import {
@@ -55,6 +57,7 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "patients", label: "Pacientes", icon: Users },
     { id: "medications", label: "Medicamentos", icon: Pill },
+    { id: "prescriptions", label: "Receitas", icon: FileText },
     { id: "stock", label: "Estoque", icon: Package },
     { 
       id: "replenishment", 
@@ -62,8 +65,8 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
       icon: ShoppingCart, 
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined 
     },
-    { id: "alerts", label: "Alertas", icon: Bell },
-    { id: "settings", label: "Configurações", icon: Settings },
+    { id: "caregiver-schedules", label: "Escalas", icon: Calendar },
+    { id: "alerts", label: "Configurações", icon: Bell },
   ];
 
   return (
@@ -154,7 +157,7 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => {
-                  onNavigate("settings");
+                  onNavigate("alerts");
                   setSidebarOpen(false);
                 }}
                 className="cursor-pointer"
@@ -176,14 +179,14 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
       </aside>
 
       {/* Main Content */}
-      <main className="lg:pl-64 pt-16 lg:pt-0 flex-1 flex flex-col">
+      <main className="lg:pl-64 pt-16 lg:pt-0 flex-1 flex flex-col pb-16 lg:pb-16">
         <div className="p-6 lg:p-8 flex-1">
           {children}
         </div>
-        
-        {/* Footer */}
-        <Footer />
       </main>
+      
+      {/* Footer */}
+      <Footer />
 
       {/* Mobile Overlay */}
       {sidebarOpen && (

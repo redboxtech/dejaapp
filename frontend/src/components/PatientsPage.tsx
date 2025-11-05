@@ -58,6 +58,8 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [shareEmail, setShareEmail] = useState("");
+  const [medicationsDialogOpen, setMedicationsDialogOpen] = useState(false);
+  const [selectedPatientForMedications, setSelectedPatientForMedications] = useState<typeof patients[0] | null>(null);
   const [newPatient, setNewPatient] = useState({
     name: "",
     birthDate: "",
@@ -185,6 +187,73 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
     deletePatient(selectedPatientId);
     toast.success("Paciente excluído com sucesso");
     setDeleteDialogOpen(false);
+  };
+
+  const handlePatientCardClick = (patient: typeof patients[0]) => {
+    setSelectedPatientForMedications(patient);
+    setMedicationsDialogOpen(true);
+  };
+
+  // Organizar medicações por horário específico
+  const getMedicationsByTime = useMemo(() => {
+    if (!selectedPatientForMedications) return new Map<string, typeof medications>();
+    
+    const patientMedications = medications.filter(m => m.patientId === selectedPatientForMedications.id);
+    const medicationsByTime = new Map<string, typeof medications>();
+    
+    patientMedications.forEach(med => {
+      med.times.forEach(time => {
+        // Normalizar horário - extrair hora ou usar o texto como está
+        let normalizedTime = time.trim();
+        
+        // Tentar extrair hora no formato HH:MM
+        const timeMatch = time.match(/(\d{1,2}):(\d{2})/);
+        if (timeMatch) {
+          normalizedTime = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
+        } else {
+          // Mapear texto para horário aproximado
+          const timeLower = time.toLowerCase();
+          if (timeLower.includes('manhã') || timeLower.includes('manha')) normalizedTime = "08:00";
+          else if (timeLower.includes('tarde')) normalizedTime = "14:00";
+          else if (timeLower.includes('noite')) normalizedTime = "20:00";
+          else normalizedTime = time; // Usar como está se não conseguir mapear
+        }
+        
+        if (!medicationsByTime.has(normalizedTime)) {
+          medicationsByTime.set(normalizedTime, []);
+        }
+        medicationsByTime.get(normalizedTime)!.push(med);
+      });
+    });
+    
+    // Ordenar por horário
+    const sorted = Array.from(medicationsByTime.entries()).sort((a, b) => {
+      const timeA = a[0].split(':').map(Number);
+      const timeB = b[0].split(':').map(Number);
+      if (timeA[0] !== timeB[0]) return timeA[0] - timeB[0];
+      return timeA[1] - timeB[1];
+    });
+    
+    return new Map(sorted);
+  }, [selectedPatientForMedications, medications]);
+
+  const getUnitLabel = (unit: string) => {
+    const labels: Record<string, string> = {
+      mg: "mg",
+      g: "g",
+      ml: "ml",
+      mcg: "mcg",
+      ui: "UI",
+      comprimido: "comp",
+      capsula: "caps",
+      gotas: "gotas",
+      aplicacao: "aplicação",
+      inalacao: "inalação",
+      ampola: "ampola",
+      xarope: "xarope",
+      suspensao: "suspensão"
+    };
+    return labels[unit] || unit;
   };
 
   return (
@@ -471,7 +540,7 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
           <Card 
             key={patient.id} 
             className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => onNavigate("patient-detail", patient.id)}
+            onClick={() => handlePatientCardClick(patient)}
           >
             <CardContent className="p-4 sm:p-6">
               {/* Mobile Layout */}
@@ -703,6 +772,89 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Medications by Time Dialog */}
+      <Dialog open={medicationsDialogOpen} onOpenChange={setMedicationsDialogOpen}>
+        <DialogContent className="max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[#16808c]">
+              Medicações do Dia - {selectedPatientForMedications?.name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {Array.from(getMedicationsByTime.entries()).length > 0 ? (
+              Array.from(getMedicationsByTime.entries()).map(([time, meds]) => (
+                <div key={time}>
+                  <div className="font-semibold text-[#16808c] mb-2">{time}</div>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    {meds.map((med, index) => {
+                      // Calcular quantidade a ser exibida
+                      let quantityText = "";
+                      const presentationForm = med.presentationForm || med.unit || "comprimido";
+                      const timesCount = med.times.length || 1;
+                      
+                      if (med.isHalfDose) {
+                        // Se é meia dose, cada administração usa 1/2 comprimido
+                        quantityText = "1/2";
+                      } else {
+                        // Calcular quantidade por horário baseado no consumo diário
+                        // Se consumo diário é 1 e tem 1 horário = 1 comprimido por administração
+                        // Se consumo diário é 1 e tem 2 horários = 0.5 comprimido por administração (meia dose)
+                        const dailyConsumption = med.dailyConsumption || 1;
+                        const quantityPerTime = dailyConsumption / timesCount;
+                        
+                        // Se a quantidade for menor que 1, mostrar como fração ou decimal
+                        if (quantityPerTime < 1) {
+                          // Se for exatamente 0.5, mostrar como 1/2
+                          if (quantityPerTime === 0.5) {
+                            quantityText = "1/2";
+                          } else {
+                            quantityText = `${quantityPerTime}`;
+                          }
+                        } else {
+                          // Arredondar para número inteiro ou mostrar decimal se necessário
+                          quantityText = quantityPerTime % 1 === 0 
+                            ? `${Math.round(quantityPerTime)}` 
+                            : `${quantityPerTime.toFixed(1)}`;
+                        }
+                      }
+                      
+                      const unitLabel = getUnitLabel(presentationForm);
+                      let frequencyText = "";
+                      if (med.customFrequency) {
+                        frequencyText = ` • ${med.customFrequency}`;
+                      }
+                      if (med.isExtra) {
+                        frequencyText += " • Extra";
+                      }
+                      
+                      return (
+                        <li key={`${med.id}-${index}`} className="text-sm text-gray-700">
+                          {med.name} {med.dosage}{getUnitLabel(med.dosageUnit || med.unit)} - {quantityText} {unitLabel}{frequencyText}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 italic">Nenhuma medicação cadastrada</p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setMedicationsDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

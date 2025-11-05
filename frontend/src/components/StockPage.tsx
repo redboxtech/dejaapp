@@ -36,14 +36,14 @@ export function StockPage() {
     medicationId: "",
     quantity: "",
     source: "",
-    prescription: ""
+    price: "",
+    totalInstallments: ""
   });
 
   // Memoized filtered stock
   const filteredStock = useMemo(() => {
     return stockItems.filter(item =>
-      item.medication.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.patient.toLowerCase().includes(searchTerm.toLowerCase())
+      item.medication.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [stockItems, searchTerm]);
 
@@ -58,19 +58,46 @@ export function StockPage() {
   }, [stockItems]);
 
   const handleAddStock = () => {
-    if (!newStock.medicationId || !newStock.quantity) {
+    if (!newStock.medicationId || !newStock.quantity || !newStock.source) {
       toast.error("Preencha os campos obrigatórios");
       return;
     }
 
     const quantity = parseFloat(newStock.quantity);
-    const source = newStock.source === "purchase" ? "Compra" :
-                   newStock.source === "donation" ? "Doação" : "Transferência";
+    let source = "";
+    
+    // Mapear origem para o texto correto
+    switch (newStock.source) {
+      case "health_post":
+        source = "Posto de Saúde";
+        break;
+      case "pharmacy":
+        source = "Farmácia";
+        break;
+      case "health_secretary":
+        source = "Secretaria de Saúde";
+        break;
+      case "free_sample":
+        source = "Amostra Grátis";
+        break;
+      default:
+        source = newStock.source;
+    }
 
-    addStockEntry(newStock.medicationId, quantity, source);
+    // Obter o preço (se fornecido) - apenas para Farmácia
+    const price = newStock.source === "pharmacy" && newStock.price && newStock.price.trim() !== ""
+      ? parseFloat(newStock.price)
+      : null;
+
+    // Obter o número de parcelas (se fornecido) - apenas para Farmácia
+    const totalInstallments = newStock.source === "pharmacy" && newStock.totalInstallments && newStock.totalInstallments.trim() !== ""
+      ? parseInt(newStock.totalInstallments)
+      : null;
+
+    addStockEntry(newStock.medicationId, quantity, source, price, totalInstallments);
     toast.success("Entrada de estoque registrada com sucesso!");
     setIsAddStockOpen(false);
-    setNewStock({ medicationId: "", quantity: "", source: "", prescription: "" });
+    setNewStock({ medicationId: "", quantity: "", source: "", price: "", totalInstallments: "" });
   };
 
   const getStatusColor = (status: string) => {
@@ -81,8 +108,12 @@ export function StockPage() {
     }
   };
 
-  const getProgressValue = (current: number, boxQuantity: number) => {
-    return Math.min((current / boxQuantity) * 100, 100);
+  const getProgressValue = (current: number, dailyConsumption: number) => {
+    // Calcular consumo mensal (30 dias)
+    const monthlyConsumption = dailyConsumption * 30;
+    if (monthlyConsumption === 0) return 0;
+    // Calcular porcentagem baseada no consumo mensal (pode ser acima de 100%)
+    return (current / monthlyConsumption) * 100;
   };
 
   const getUnitLabel = (unit: string) => {
@@ -134,7 +165,7 @@ export function StockPage() {
                   <SelectContent>
                     {medications.map(med => (
                       <SelectItem key={med.id} value={med.id}>
-                        {med.name} {med.dosage}{getUnitLabel(med.unit)} - {med.patient}
+                        {med.name} {med.dosage}{getUnitLabel(med.dosageUnit || med.unit)} ({getUnitLabel(med.presentationForm || med.unit)})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -157,18 +188,56 @@ export function StockPage() {
                 <Label htmlFor="source">Origem *</Label>
                 <Select
                   value={newStock.source}
-                  onValueChange={(value) => setNewStock({ ...newStock, source: value })}
+                  onValueChange={(value) => setNewStock({ ...newStock, source: value, price: "", totalInstallments: "" })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="purchase">Compra</SelectItem>
-                    <SelectItem value="donation">Doação</SelectItem>
-                    <SelectItem value="transfer">Transferência</SelectItem>
+                    <SelectItem value="health_post">Posto de Saúde</SelectItem>
+                    <SelectItem value="pharmacy">Farmácia</SelectItem>
+                    <SelectItem value="health_secretary">Secretaria de Saúde</SelectItem>
+                    <SelectItem value="free_sample">Amostra Grátis</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {newStock.source === "pharmacy" && (
+                <>
+                  <div>
+                    <Label htmlFor="price">Preço Total (opcional)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newStock.price}
+                      onChange={(e) => setNewStock({ ...newStock, price: e.target.value })}
+                      placeholder="Ex: 45.50"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Informe o preço total pago na farmácia (opcional)</p>
+                  </div>
+                  {newStock.price && newStock.price.trim() !== "" && (
+                    <div>
+                      <Label htmlFor="totalInstallments">Número de Parcelas (opcional)</Label>
+                      <Input
+                        id="totalInstallments"
+                        type="number"
+                        min="1"
+                        max="12"
+                        value={newStock.totalInstallments}
+                        onChange={(e) => setNewStock({ ...newStock, totalInstallments: e.target.value })}
+                        placeholder="Ex: 3"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {newStock.totalInstallments && parseInt(newStock.totalInstallments) > 0
+                          ? `Valor da parcela: R$ ${(parseFloat(newStock.price) / parseInt(newStock.totalInstallments)).toFixed(2)}`
+                          : "Deixe em branco para compra à vista"}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddStockOpen(false)}>
@@ -265,7 +334,6 @@ export function StockPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h3 className="text-xl font-bold text-[#16808c]">{item.medication}</h3>
-                    <p className="text-gray-600">{item.patient}</p>
                   </div>
                   <Badge className={`${getStatusColor(item.status)} text-white`}>
                     {item.status === "critical" ? "Crítico" : item.status === "warning" ? "Atenção" : "Normal"}
@@ -275,20 +343,24 @@ export function StockPage() {
                 {/* Progress Bar */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Estoque atual: {item.current} {getUnitLabel(item.unit)}</span>
-                    <span className="font-medium">{Math.round(getProgressValue(item.current, item.boxQuantity))}%</span>
+                    <span className="text-gray-600">Estoque atual: {item.current} {getUnitLabel(item.presentationForm || item.unit)}</span>
+                    <span className="font-medium">{Math.round(getProgressValue(item.current, item.dailyConsumption))}% do consumo mensal</span>
                   </div>
                   <Progress 
-                    value={getProgressValue(item.current, item.boxQuantity)}
+                    value={Math.min(getProgressValue(item.current, item.dailyConsumption), 100)}
                     className="h-3"
                   />
                 </div>
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="border-l-4 border-[#16808c] pl-3">
+                    <div className="text-xs text-gray-500 mb-1">Estoque Atual</div>
+                    <div className="font-bold text-lg text-[#16808c]">{item.current} {getUnitLabel(item.presentationForm || item.unit)}</div>
+                  </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Consumo Diário</div>
-                    <div className="font-medium">{item.dailyConsumption} {getUnitLabel(item.unit)}</div>
+                    <div className="font-medium">{item.dailyConsumption} {getUnitLabel(item.presentationForm || item.unit)}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Dias Restantes</div>
@@ -302,39 +374,51 @@ export function StockPage() {
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Qtd. por Embalagem</div>
-                    <div className="font-medium">{item.boxQuantity} {getUnitLabel(item.unit)}</div>
+                    <div className="font-medium">{item.boxQuantity} {getUnitLabel(item.presentationForm || item.unit)}</div>
                   </div>
                 </div>
 
-                {/* Recent Movements */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <History className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium text-sm text-gray-700">Movimentações Recentes</span>
-                  </div>
-                  <div className="space-y-2">
-                    {item.movements.slice(0, 2).map((movement, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded">
-                        <div className="flex items-center gap-3">
-                          {movement.type === "in" ? (
-                            <ArrowUpCircle className="h-4 w-4 text-[#a0bf80]" />
-                          ) : (
-                            <ArrowDownCircle className="h-4 w-4 text-gray-400" />
-                          )}
-                          <div>
-                            <div className="text-sm font-medium">
-                              {movement.type === "in" ? "Entrada" : "Saída"} - {movement.quantity} {getUnitLabel(item.unit)}
+                {/* Última Entrada */}
+                {item.movements.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <History className="h-4 w-4 text-gray-500" />
+                      <span className="font-medium text-sm text-gray-700">Última Entrada</span>
+                    </div>
+                    <div className="p-3 bg-white border border-gray-200 rounded">
+                      {(() => {
+                        const lastEntry = item.movements
+                          .filter(m => m.type === "in")
+                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+                        
+                        if (!lastEntry) return null;
+                        
+                        return (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <ArrowUpCircle className="h-4 w-4 text-[#a0bf80]" />
+                              <div>
+                                <div className="text-sm font-medium">
+                                  {lastEntry.quantity} {getUnitLabel(item.presentationForm || item.unit)}
+                                </div>
+                                <div className="text-xs text-gray-500">{lastEntry.source}</div>
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">{movement.source}</div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(lastEntry.date).toLocaleString('pt-BR', { 
+                                day: '2-digit', 
+                                month: '2-digit', 
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {new Date(movement.date).toLocaleDateString('pt-BR')}
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      })()}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>

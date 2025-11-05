@@ -1,0 +1,55 @@
+# Build artifacts
+bin/
+obj/
+*.binlog
+*.user
+*.suo
+*.userosscache
+
+# .NET Core / Entity Framework
+**/obj/
+**/bin/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# Visual Studio / Rider
+.vs/
+.vscode/
+.idea/
+*.sln.iml
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Environment files
+.env
+.env.*
+appsettings.json
+appsettings.*.local.json
+
+# Uploads
+uploads/
+**/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.cache
+
+# Any project folders that should not be at root level
+# (EF Core sometimes creates these accidentally)
+DejaBackend.*/
+backend.*/
+!backend/
+
