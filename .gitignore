@@ -49,7 +49,9 @@ Thumbs.db
 
 # Any project folders that should not be at root level
 # (EF Core sometimes creates these accidentally)
-DejaBackend.*/
+# Ignore DejaBackend only at root level, not inside backend/
+/DejaBackend.*/
+!/backend/
 backend.*/
-!backend/
+!/backend/DejaBackend.*/
 
