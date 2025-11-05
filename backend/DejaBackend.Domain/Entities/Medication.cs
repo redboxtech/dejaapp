@@ -10,41 +10,50 @@ public class Medication
     public string DosageUnit { get; private set; } // Unidade de medida da dosagem (mg, g, ml, etc.)
     public string PresentationForm { get; private set; } // Forma de apresentação (comprimido, cápsula, gotas, etc.)
     public string Unit { get; private set; } // Mantido para compatibilidade - será removido depois
-    public Guid PatientId { get; private set; }
-    public Patient Patient { get; private set; }
+    // Relacionamento many-to-many com Patient através de MedicationPatient
+    // A posologia (frequência, horários, tratamento) está em MedicationPatient, não em Medication
+    public ICollection<MedicationPatient> MedicationPatients { get; private set; } = new List<MedicationPatient>();
     public string Route { get; private set; }
-    public string Frequency { get; private set; }
-    public List<string> Times { get; private set; } = new();
-    public bool IsHalfDose { get; private set; } // Meia dose (1/2 comprimido por administração)
-    public string? CustomFrequency { get; private set; } // Frequência personalizada (ex: "a cada 2 dias")
-    public bool IsExtra { get; private set; } // Medicação extra/avulsa
-    public TreatmentType TreatmentType { get; private set; }
-    public DateOnly TreatmentStartDate { get; private set; }
-    public DateOnly? TreatmentEndDate { get; private set; }
-    public bool HasTapering { get; private set; }
-    // TaperingSchedule will be a separate entity or complex type if needed, for now, simplify
     
-    public decimal DailyConsumption { get; private set; }
+    // DailyConsumption agora é calculado a partir da soma dos consumos de todos os pacientes
+    // Removido: public decimal DailyConsumption { get; private set; }
     public decimal BoxQuantity { get; private set; }
     public StockStatus Status { get; private set; }
     
     // Propriedades calculadas (não armazenadas no banco)
     public decimal CurrentStock => CalculateCurrentStock();
+    // Consumo diário total = soma dos consumos de todos os pacientes associados
+    public decimal TotalDailyConsumption => MedicationPatients?.Sum(mp => mp.DailyConsumption) ?? 0;
     public int DaysLeft => CalculateDaysLeft();
     public string Instructions { get; private set; }
     public Guid OwnerId { get; private set; }
-    public Guid? PrescriptionId { get; private set; } // Associação com receita
-    public Prescription? Prescription { get; private set; }
+    // PrescriptionId foi movido para MedicationPatient (cada paciente pode ter uma receita diferente)
 
     public ICollection<StockMovement> Movements { get; private set; } = new List<StockMovement>();
 
     // EF Core constructor
-    private Medication() { }
+    private Medication() 
+    {
+        // Inicializar propriedades não-nuláveis para evitar avisos do compilador
+        // EF Core irá preencher essas propriedades ao carregar do banco de dados
+        Name = string.Empty;
+        DosageUnit = string.Empty;
+        PresentationForm = string.Empty;
+        Unit = string.Empty;
+        Route = string.Empty;
+        Instructions = string.Empty;
+    }
 
     public Medication(
-        string name, decimal dosage, string dosageUnit, string presentationForm, Guid patientId, string route, string frequency,
-        List<string> times, bool isHalfDose, string? customFrequency, bool isExtra, TreatmentType treatmentType, DateOnly treatmentStartDate, DateOnly? treatmentEndDate,
-        bool hasTapering, decimal initialStock, decimal dailyConsumption, decimal boxQuantity, string instructions, Guid ownerId, Guid? prescriptionId = null)
+        string name, 
+        decimal dosage, 
+        string dosageUnit, 
+        string presentationForm, 
+        string route, 
+        decimal initialStock, 
+        decimal boxQuantity, 
+        string instructions, 
+        Guid ownerId)
     {
         Id = Guid.NewGuid();
         Name = name;
@@ -52,22 +61,10 @@ public class Medication
         DosageUnit = dosageUnit;
         PresentationForm = presentationForm;
         Unit = dosageUnit; // Mantido para compatibilidade - será removido depois
-        PatientId = patientId;
         Route = route;
-        Frequency = frequency;
-        Times = times;
-        IsHalfDose = isHalfDose;
-        CustomFrequency = customFrequency;
-        IsExtra = isExtra;
-        TreatmentType = treatmentType;
-        TreatmentStartDate = treatmentStartDate;
-        TreatmentEndDate = treatmentEndDate;
-        HasTapering = hasTapering;
-        DailyConsumption = dailyConsumption;
         BoxQuantity = boxQuantity;
         Instructions = instructions;
         OwnerId = ownerId;
-        PrescriptionId = prescriptionId;
         
         // Initial stock movement - estoque inicial é registrado como movimentação
         if (initialStock > 0)
@@ -76,6 +73,72 @@ public class Medication
         }
         
         UpdateStockStatus();
+    }
+    
+    // Método para adicionar um paciente à medicação com posologia
+    public void AddPatient(
+        Guid patientId,
+        string frequency,
+        List<string> times,
+        bool isHalfDose,
+        string? customFrequency,
+        bool isExtra,
+        TreatmentType treatmentType,
+        DateOnly treatmentStartDate,
+        DateOnly? treatmentEndDate,
+        bool hasTapering,
+        decimal dailyConsumption,
+        Guid? prescriptionId = null)
+    {
+        if (MedicationPatients == null)
+        {
+            MedicationPatients = new List<MedicationPatient>();
+        }
+        
+        // Verificar se o paciente já está associado
+        if (!MedicationPatients.Any(mp => mp.PatientId == patientId))
+        {
+            MedicationPatients.Add(new MedicationPatient(
+                Id, 
+                patientId, 
+                frequency,
+                times,
+                isHalfDose,
+                customFrequency,
+                isExtra,
+                treatmentType,
+                treatmentStartDate,
+                treatmentEndDate,
+                hasTapering,
+                dailyConsumption,
+                prescriptionId));
+            UpdateStockStatus();
+        }
+    }
+    
+    // Método para remover um paciente da medicação
+    public void RemovePatient(Guid patientId)
+    {
+        if (MedicationPatients != null)
+        {
+            var medicationPatient = MedicationPatients.FirstOrDefault(mp => mp.PatientId == patientId);
+            if (medicationPatient != null)
+            {
+                MedicationPatients.Remove(medicationPatient);
+                UpdateStockStatus();
+            }
+        }
+    }
+    
+    // Método para atualizar o consumo diário de um paciente específico
+    public void UpdatePatientDailyConsumption(Guid patientId, decimal dailyConsumption)
+    {
+        var medicationPatient = MedicationPatients?.FirstOrDefault(mp => mp.PatientId == patientId);
+        if (medicationPatient != null)
+        {
+            medicationPatient.UpdateDailyConsumption(dailyConsumption);
+            UpdateStockStatus();
+        }
     }
 
     public void UpdateStock(decimal quantity, StockMovementType type, string source, Guid userId, decimal? price = null, int? totalInstallments = null)
@@ -86,9 +149,13 @@ public class Medication
     }
 
     public void UpdateDetails(
-        string name, decimal dosage, string dosageUnit, string presentationForm, string route, string frequency,
-        List<string> times, bool isHalfDose, string? customFrequency, bool isExtra, TreatmentType treatmentType, DateOnly treatmentStartDate, DateOnly? treatmentEndDate,
-        bool hasTapering, decimal dailyConsumption, decimal boxQuantity, string instructions)
+        string name, 
+        decimal dosage, 
+        string dosageUnit, 
+        string presentationForm, 
+        string route, 
+        decimal boxQuantity, 
+        string instructions)
     {
         Name = name;
         Dosage = dosage;
@@ -96,25 +163,10 @@ public class Medication
         PresentationForm = presentationForm;
         Unit = dosageUnit; // Mantido para compatibilidade - será removido depois
         Route = route;
-        Frequency = frequency;
-        Times = times;
-        IsHalfDose = isHalfDose;
-        CustomFrequency = customFrequency;
-        IsExtra = isExtra;
-        TreatmentType = treatmentType;
-        TreatmentStartDate = treatmentStartDate;
-        TreatmentEndDate = treatmentEndDate;
-        HasTapering = hasTapering;
-        DailyConsumption = dailyConsumption;
         BoxQuantity = boxQuantity;
         Instructions = instructions;
         
         UpdateStockStatus();
-    }
-
-    public void UpdatePrescriptionId(Guid? prescriptionId)
-    {
-        PrescriptionId = prescriptionId;
     }
 
     private void UpdateStockStatus()
@@ -135,13 +187,14 @@ public class Medication
         return entries - exits;
     }
     
-    // Calcula os dias restantes baseado no estoque atual e consumo diário
+    // Calcula os dias restantes baseado no estoque atual e consumo diário total (soma de todos os pacientes)
     private int CalculateDaysLeft()
     {
-        if (DailyConsumption <= 0)
+        var totalDailyConsumption = TotalDailyConsumption;
+        if (totalDailyConsumption <= 0)
             return 0;
         
         var currentStock = CalculateCurrentStock();
-        return (int)Math.Floor(currentStock / DailyConsumption);
+        return (int)Math.Floor(currentStock / totalDailyConsumption);
     }
 }

@@ -27,24 +27,39 @@ public class GetCaregiverSchedulesQueryHandler : IRequestHandler<GetCaregiverSch
         var userId = _currentUserService.UserId.Value;
 
         // Get all accessible patients (owned or shared)
-        var accessiblePatientIds = await _context.Patients
-            .Where(p => p.OwnerId == userId || p.SharedWith.Contains(userId))
-            .Select(p => p.Id)
+        // Buscar todos os pacientes primeiro e filtrar em memória (SharedWith pode ter problemas com Contains em SQL)
+        var allPatients = await _context.Patients
             .ToListAsync(cancellationToken);
+        
+        var accessiblePatientIds = allPatients
+            .Where(p => p.OwnerId == userId || (p.SharedWith != null && p.SharedWith.Contains(userId)))
+            .Select(p => p.Id)
+            .ToList();
 
         var schedules = await _context.CaregiverSchedules
             .AsNoTracking()
             .Include(s => s.Caregiver)
-            .Include(s => s.Patient)
-            .Where(s => s.OwnerId == userId && accessiblePatientIds.Contains(s.PatientId))
+            .Include(s => s.CaregiverSchedulePatients)
+                .ThenInclude(csp => csp.Patient)
+            .Where(s => s.OwnerId == userId)
             .ToListAsync(cancellationToken);
 
-        return schedules.Select(s => new CaregiverScheduleDto(
+        // Filtrar escalas que têm pelo menos um paciente acessível
+        var filteredSchedules = schedules.Where(s => 
+            s.CaregiverSchedulePatients.Any(csp => accessiblePatientIds.Contains(csp.PatientId))
+        ).ToList();
+
+        return filteredSchedules.Select(s => new CaregiverScheduleDto(
             s.Id,
             s.CaregiverId,
             s.Caregiver?.Name ?? string.Empty,
-            s.PatientId,
-            s.Patient?.Name ?? string.Empty,
+            s.CaregiverSchedulePatients
+                .Where(csp => accessiblePatientIds.Contains(csp.PatientId))
+                .Select(csp => new PatientInfo(
+                    csp.PatientId,
+                    csp.Patient?.Name ?? string.Empty
+                ))
+                .ToList(),
             s.DaysOfWeek,
             s.StartTime,
             s.EndTime,

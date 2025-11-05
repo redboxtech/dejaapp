@@ -19,7 +19,7 @@ public class Prescription
     public Patient Patient { get; private set; } = null!;
     public Guid OwnerId { get; private set; } // Representante legal que fez upload
     public DateTime UploadedAt { get; private set; }
-    public ICollection<Medication> Medications { get; private set; } = new List<Medication>();
+    // Medications foi removido - agora o relacionamento é através de MedicationPatient
 
     // EF Core constructor
     private Prescription() { }

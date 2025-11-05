@@ -1,23 +1,23 @@
 using DejaBackend.Application.Interfaces;
-using DejaBackend.Application.Prescriptions.Commands.ProcessPrescription;
+using DejaBackend.Application.Medications.Queries;
 using DejaBackend.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace DejaBackend.Application.Medications.Queries.GetMedications;
+namespace DejaBackend.Application.Medications.Queries.GetAllMedications;
 
-public class GetMedicationsQueryHandler : IRequestHandler<GetMedicationsQuery, List<MedicationDto>>
+public class GetAllMedicationsQueryHandler : IRequestHandler<GetAllMedicationsQuery, List<MedicationDto>>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
 
-    public GetMedicationsQueryHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
+    public GetAllMedicationsQueryHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
     }
 
-    public async Task<List<MedicationDto>> Handle(GetMedicationsQuery request, CancellationToken cancellationToken)
+    public async Task<List<MedicationDto>> Handle(GetAllMedicationsQuery request, CancellationToken cancellationToken)
     {
         if (!_currentUserService.UserId.HasValue)
         {
@@ -26,24 +26,15 @@ public class GetMedicationsQueryHandler : IRequestHandler<GetMedicationsQuery, L
 
         var userId = _currentUserService.UserId.Value;
 
-        // 1. Get all patients the user has access to (owned or shared)
-        var allPatients = await _context.Patients
-            .ToListAsync(cancellationToken);
-        var accessiblePatientIds = allPatients
-            .Where(p => p.OwnerId == userId || p.SharedWith.Contains(userId))
-            .Select(p => p.Id)
-            .ToList();
-
-        // 2. Get all medications where at least one associated patient is accessible
-        // Incluir MedicationPatients e seus Patients, e também Movements para calcular estoque
+        // Buscar todas as medicações do usuário (incluindo as não associadas a pacientes)
         var medications = await _context.Medications
             .Include(m => m.MedicationPatients)
                 .ThenInclude(mp => mp.Patient)
-            .Include(m => m.Movements) // Incluir movimentações para calcular estoque atual
-            .Where(m => m.MedicationPatients.Any(mp => accessiblePatientIds.Contains(mp.PatientId)))
+            .Include(m => m.Movements)
+            .Where(m => m.OwnerId == userId)
             .ToListAsync(cancellationToken);
 
-        // 3. Buscar configurações de alertas do usuário para usar thresholds dinâmicos
+        // Buscar configurações de alertas do usuário para usar thresholds dinâmicos
         var alertSettings = await _context.AlertSettings
             .FirstOrDefaultAsync(s => s.UserId == userId, cancellationToken);
         
@@ -73,47 +64,47 @@ public class GetMedicationsQueryHandler : IRequestHandler<GetMedicationsQuery, L
             ))
             .ToList();
 
-        // Para compatibilidade com o frontend, pegar dados de posologia do primeiro paciente associado
-        // Se não houver paciente associado, usar valores padrão
-        var firstPatient = medication.MedicationPatients.FirstOrDefault();
-        
         return new MedicationDto(
             medication.Id,
             medication.Name,
             medication.Dosage,
             medication.DosageUnit,
             medication.PresentationForm,
-            medication.Unit, // Mantido para compatibilidade
-            patients, // Lista de pacientes associados
+            medication.Unit,
+            patients,
             medication.Route,
-            firstPatient?.Frequency ?? "", // Posologia do primeiro paciente ou vazio
-            firstPatient?.Times ?? new List<string>(), // Horários do primeiro paciente ou vazio
-            firstPatient?.IsHalfDose ?? false,
-            firstPatient?.CustomFrequency,
-            firstPatient?.IsExtra ?? false,
-            firstPatient?.TreatmentType ?? Domain.Enums.TreatmentType.Continuous,
-            firstPatient?.TreatmentStartDate ?? DateOnly.FromDateTime(DateTime.Now),
-            firstPatient?.TreatmentEndDate,
-            firstPatient?.HasTapering ?? false,
+            "", // Frequency não existe mais na Medication (está em MedicationPatient)
+            new List<string>(), // Times não existe mais na Medication (está em MedicationPatient)
+            false, // IsHalfDose não existe mais na Medication (está em MedicationPatient)
+            null, // CustomFrequency não existe mais na Medication (está em MedicationPatient)
+            false, // IsExtra não existe mais na Medication (está em MedicationPatient)
+            Domain.Enums.TreatmentType.Continuous, // TreatmentType não existe mais na Medication (está em MedicationPatient)
+            DateOnly.FromDateTime(DateTime.Now), // TreatmentStartDate não existe mais na Medication (está em MedicationPatient)
+            null, // TreatmentEndDate não existe mais na Medication (está em MedicationPatient)
+            false, // HasTapering não existe mais na Medication (está em MedicationPatient)
             medication.CurrentStock,
-            medication.TotalDailyConsumption, // Consumo total = soma de todos os pacientes
+            medication.TotalDailyConsumption,
             medication.DaysLeft,
             medication.BoxQuantity,
-            CalculateStatus(medication.DaysLeft, criticalThreshold, lowThreshold), // Calcular status usando thresholds dinâmicos
+            CalculateStatus(medication.DaysLeft, criticalThreshold, lowThreshold),
             medication.Instructions,
             medication.OwnerId,
-            firstPatient?.PrescriptionId, // PrescriptionId está em MedicationPatient agora
-            null // TaperingSchedule será implementado quando a entidade TaperingSchedule for criada
+            null, // PrescriptionId não existe mais na Medication (está em MedicationPatient)
+            null // TaperingSchedule não existe mais na Medication (está em MedicationPatient)
         );
     }
 
     private string CalculateStatus(int daysLeft, int criticalThreshold, int lowThreshold)
     {
-        // Usar thresholds dinâmicos das configurações de alertas
         if (daysLeft <= criticalThreshold)
+        {
             return "critical";
+        }
         if (daysLeft <= lowThreshold)
+        {
             return "warning";
+        }
         return "ok";
     }
 }
+

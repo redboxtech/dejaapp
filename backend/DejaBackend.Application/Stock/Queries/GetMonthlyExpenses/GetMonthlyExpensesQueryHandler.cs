@@ -38,9 +38,10 @@ public class GetMonthlyExpensesQueryHandler : IRequestHandler<GetMonthlyExpenses
             .Select(p => p.Id)
             .ToList();
 
-        // Buscar todos os medicamentos dos pacientes acessíveis
+        // Buscar todos os medicamentos que têm pelo menos um paciente acessível associado
         var medicationIds = await _context.Medications
-            .Where(m => accessiblePatientIds.Contains(m.PatientId))
+            .Include(m => m.MedicationPatients)
+            .Where(m => m.MedicationPatients.Any(mp => accessiblePatientIds.Contains(mp.PatientId)))
             .Select(m => m.Id)
             .ToListAsync(cancellationToken);
 

@@ -4,6 +4,7 @@ using DejaBackend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DejaBackend.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251105052042_RemovePosologyFromMedication")]
+    partial class RemovePosologyFromMedication
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,6 +164,9 @@ namespace DejaBackend.Infrastructure.Migrations
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("StartTime")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -169,22 +175,9 @@ namespace DejaBackend.Infrastructure.Migrations
 
                     b.HasIndex("CaregiverId");
 
-                    b.ToTable("CaregiverSchedules");
-                });
-
-            modelBuilder.Entity("DejaBackend.Domain.Entities.CaregiverSchedulePatient", b =>
-                {
-                    b.Property<Guid>("CaregiverScheduleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PatientId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("CaregiverScheduleId", "PatientId");
-
                     b.HasIndex("PatientId");
 
-                    b.ToTable("CaregiverSchedulePatients");
+                    b.ToTable("CaregiverSchedules");
                 });
 
             modelBuilder.Entity("DejaBackend.Domain.Entities.Medication", b =>
@@ -214,6 +207,9 @@ namespace DejaBackend.Infrastructure.Migrations
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("PrescriptionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("PresentationForm")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -230,6 +226,8 @@ namespace DejaBackend.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PrescriptionId");
 
                     b.ToTable("Medications");
                 });
@@ -715,26 +713,22 @@ namespace DejaBackend.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Caregiver");
-                });
-
-            modelBuilder.Entity("DejaBackend.Domain.Entities.CaregiverSchedulePatient", b =>
-                {
-                    b.HasOne("DejaBackend.Domain.Entities.CaregiverSchedule", "CaregiverSchedule")
-                        .WithMany("CaregiverSchedulePatients")
-                        .HasForeignKey("CaregiverScheduleId")
+                    b.HasOne("DejaBackend.Domain.Entities.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DejaBackend.Domain.Entities.Patient", "Patient")
-                        .WithMany("CaregiverSchedulePatients")
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("CaregiverSchedule");
+                    b.Navigation("Caregiver");
 
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("DejaBackend.Domain.Entities.Medication", b =>
+                {
+                    b.HasOne("DejaBackend.Domain.Entities.Prescription", null)
+                        .WithMany("Medications")
+                        .HasForeignKey("PrescriptionId");
                 });
 
             modelBuilder.Entity("DejaBackend.Domain.Entities.MedicationPatient", b =>
@@ -843,11 +837,6 @@ namespace DejaBackend.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DejaBackend.Domain.Entities.CaregiverSchedule", b =>
-                {
-                    b.Navigation("CaregiverSchedulePatients");
-                });
-
             modelBuilder.Entity("DejaBackend.Domain.Entities.Medication", b =>
                 {
                     b.Navigation("MedicationPatients");
@@ -857,9 +846,12 @@ namespace DejaBackend.Infrastructure.Migrations
 
             modelBuilder.Entity("DejaBackend.Domain.Entities.Patient", b =>
                 {
-                    b.Navigation("CaregiverSchedulePatients");
-
                     b.Navigation("MedicationPatients");
+                });
+
+            modelBuilder.Entity("DejaBackend.Domain.Entities.Prescription", b =>
+                {
+                    b.Navigation("Medications");
                 });
 #pragma warning restore 612, 618
         }

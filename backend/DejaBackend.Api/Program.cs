@@ -1,6 +1,7 @@
 using DejaBackend.Application;
 using DejaBackend.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using System.IO;
@@ -19,6 +20,16 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "DejaBackend API", Version = "v1" });
+
+    // Add custom operation filter for file uploads
+    c.OperationFilter<DejaBackend.Api.Filters.FileUploadOperationFilter>();
+
+    // Configure IFormFile for Swagger
+    c.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
 
     // Add JWT Authentication to Swagger
     var securityScheme = new OpenApiSecurityScheme

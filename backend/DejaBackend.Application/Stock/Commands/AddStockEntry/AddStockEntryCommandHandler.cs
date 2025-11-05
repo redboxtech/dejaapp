@@ -27,6 +27,8 @@ public class AddStockEntryCommandHandler : IRequestHandler<AddStockEntryCommand,
 
         var medication = await _context.Medications
             .Include(m => m.Movements)
+            .Include(m => m.MedicationPatients)
+                .ThenInclude(mp => mp.Patient)
             .AsTracking() // Garantir que a entidade seja rastreada
             .FirstOrDefaultAsync(m => m.Id == request.MedicationId, cancellationToken);
 
@@ -35,13 +37,21 @@ public class AddStockEntryCommandHandler : IRequestHandler<AddStockEntryCommand,
             return false;
         }
 
-        // Check if user has access (owner or shared patient)
-        var patient = await _context.Patients
-            .FirstOrDefaultAsync(p => p.Id == medication.PatientId, cancellationToken);
-
-        if (patient == null || (patient.OwnerId != userId && !patient.SharedWith.Contains(userId)))
+        // Verificar se o usuário tem acesso (owner ou paciente compartilhado)
+        // Verificar se o usuário é o dono OU se tem acesso a pelo menos um paciente associado
+        bool hasAccess = medication.OwnerId == userId;
+        
+        if (!hasAccess)
         {
-            throw new UnauthorizedAccessException("Medication not found or user does not have access.");
+            // Verificar se tem acesso a algum paciente associado
+            var accessiblePatients = medication.MedicationPatients
+                .Where(mp => mp.Patient.OwnerId == userId || mp.Patient.SharedWith.Contains(userId))
+                .Any();
+            
+            if (!accessiblePatients)
+            {
+                throw new UnauthorizedAccessException("Medication not found or user does not have access.");
+            }
         }
 
         // Usar o método UpdateStock da entidade que adiciona o movimento à coleção e atualiza o status

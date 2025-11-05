@@ -29,9 +29,9 @@ public class DeletePrescriptionCommandHandler : IRequestHandler<DeletePrescripti
 
         var userId = _currentUserService.UserId.Value;
 
-        // Buscar a receita com as medicações associadas
+        // Buscar a receita com o paciente associado
+        // As medicações são associadas através de MedicationPatient, não diretamente
         var prescription = await _context.Prescriptions
-            .Include(p => p.Medications)
             .Include(p => p.Patient)
             .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
 
@@ -46,11 +46,12 @@ public class DeletePrescriptionCommandHandler : IRequestHandler<DeletePrescripti
             throw new UnauthorizedAccessException("User does not have access to delete this prescription.");
         }
 
-        // Remover associação com medicações (define PrescriptionId como null)
+        // Remover associação com medicações (define PrescriptionId como null em MedicationPatient)
         // As medicações continuam existindo, apenas sem associação com a receita
-        await _context.Medications
-            .Where(m => m.PrescriptionId == prescription.Id)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(m => m.PrescriptionId, (Guid?)null), cancellationToken);
+        // PrescriptionId agora está em MedicationPatient, não em Medication
+        await _context.MedicationPatients
+            .Where(mp => mp.PrescriptionId == prescription.Id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(mp => mp.PrescriptionId, (Guid?)null), cancellationToken);
 
         // Deletar o arquivo do Azure Storage
         if (!string.IsNullOrWhiteSpace(prescription.FilePath))

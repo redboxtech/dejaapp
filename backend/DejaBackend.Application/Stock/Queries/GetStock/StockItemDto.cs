@@ -4,9 +4,9 @@ public record StockItemDto(
     Guid Id,
     string Medication,
     Guid MedicationId,
-    string Patient,
+    string Patients, // Lista de pacientes separados por vírgula (estoque é compartilhado)
     decimal Current,
-    decimal DailyConsumption,
+    decimal TotalDailyConsumption, // Consumo total = soma de todos os pacientes
     int DaysLeft,
     string EstimatedEndDate,
     decimal BoxQuantity,

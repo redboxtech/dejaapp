@@ -1,5 +1,6 @@
 using DejaBackend.Application.Caregivers.Commands.AddCaregiver;
 using DejaBackend.Application.Caregivers.Commands.DeleteCaregiver;
+using DejaBackend.Application.Caregivers.Commands.UpdateCaregiver;
 using DejaBackend.Application.Caregivers.Queries.GetCaregivers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -67,6 +68,48 @@ public class CaregiversController : ControllerBase
         }
     }
 
+    [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCaregiverRequest req)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(req.Phone))
+            {
+                return BadRequest(new { message = "Phone is required." });
+            }
+
+            var command = new UpdateCaregiverCommand(
+                id,
+                req.Name,
+                req.Email,
+                req.Phone,
+                req.Patients ?? new List<Guid>()
+            );
+            var result = await _mediator.Send(command);
+            if (!result)
+            {
+                return NotFound(new { message = "Caregiver not found." });
+            }
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return BadRequest(new { message = "An error occurred while updating the caregiver." });
+        }
+    }
+
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -92,6 +135,8 @@ public class CaregiversController : ControllerBase
             return BadRequest(new { message = "An error occurred while deleting the caregiver." });
         }
     }
+
+    public record UpdateCaregiverRequest(string Name, string? Email, string Phone, List<Guid>? Patients);
 }
 
 

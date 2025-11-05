@@ -4,7 +4,6 @@ public class CaregiverSchedule
 {
     public Guid Id { get; private set; }
     public Guid CaregiverId { get; private set; }
-    public Guid PatientId { get; private set; }
     public List<string> DaysOfWeek { get; private set; } = new(); // Segunda, Terça, Quarta, etc.
     public string StartTime { get; private set; } = string.Empty; // HH:mm format
     public string EndTime { get; private set; } = string.Empty; // HH:mm format
@@ -13,14 +12,14 @@ public class CaregiverSchedule
 
     // Navigation properties
     public Caregiver? Caregiver { get; private set; }
-    public Patient? Patient { get; private set; }
+    public ICollection<CaregiverSchedulePatient> CaregiverSchedulePatients { get; private set; } = new List<CaregiverSchedulePatient>();
 
     // EF Core constructor
     private CaregiverSchedule() { }
 
     public CaregiverSchedule(
         Guid caregiverId,
-        Guid patientId,
+        IEnumerable<Guid> patientIds,
         IEnumerable<string> daysOfWeek,
         string startTime,
         string endTime,
@@ -41,19 +40,51 @@ public class CaregiverSchedule
             throw new ArgumentException("At least one day of the week is required.", nameof(daysOfWeek));
         }
 
+        if (patientIds == null || !patientIds.Any())
+        {
+            throw new ArgumentException("At least one patient is required.", nameof(patientIds));
+        }
+
         Id = Guid.NewGuid();
         CaregiverId = caregiverId;
-        PatientId = patientId;
         DaysOfWeek = daysOfWeek.ToList();
         StartTime = startTime;
         EndTime = endTime;
         OwnerId = ownerId;
         CreatedAt = DateTime.UtcNow;
+
+        // Adicionar pacientes à escala
+        foreach (var patientId in patientIds)
+        {
+            CaregiverSchedulePatients.Add(new CaregiverSchedulePatient(Id, patientId));
+        }
+    }
+
+    public void AddPatient(Guid patientId)
+    {
+        if (!CaregiverSchedulePatients.Any(csp => csp.PatientId == patientId))
+        {
+            CaregiverSchedulePatients.Add(new CaregiverSchedulePatient(Id, patientId));
+        }
+    }
+
+    public void RemovePatient(Guid patientId)
+    {
+        var toRemove = CaregiverSchedulePatients.FirstOrDefault(csp => csp.PatientId == patientId);
+        if (toRemove != null)
+        {
+            CaregiverSchedulePatients.Remove(toRemove);
+        }
+    }
+
+    public void ClearPatients()
+    {
+        CaregiverSchedulePatients.Clear();
     }
 
     public void Update(
         Guid caregiverId,
-        Guid patientId,
+        IEnumerable<Guid> patientIds,
         IEnumerable<string> daysOfWeek,
         string startTime,
         string endTime)
@@ -73,11 +104,22 @@ public class CaregiverSchedule
             throw new ArgumentException("At least one day of the week is required.", nameof(daysOfWeek));
         }
 
+        if (patientIds == null || !patientIds.Any())
+        {
+            throw new ArgumentException("At least one patient is required.", nameof(patientIds));
+        }
+
         CaregiverId = caregiverId;
-        PatientId = patientId;
         DaysOfWeek = daysOfWeek.ToList();
         StartTime = startTime;
         EndTime = endTime;
+
+        // Atualizar pacientes
+        ClearPatients();
+        foreach (var patientId in patientIds)
+        {
+            AddPatient(patientId);
+        }
     }
 }
 

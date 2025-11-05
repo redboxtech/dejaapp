@@ -32,10 +32,11 @@ public class GetReplenishmentRequestsQueryHandler : IRequestHandler<GetReplenish
             .OrderByDescending(r => r.RequestDate)
             .ToListAsync(cancellationToken);
 
-        // Fetch related data (Medication, Patient, RequestedBy User)
+        // Fetch related data (Medication, MedicationPatients, RequestedBy User)
         var medicationIds = requests.Select(r => r.MedicationId).Distinct().ToList();
         var medications = await _context.Medications
-            .Include(m => m.Patient)
+            .Include(m => m.MedicationPatients)
+                .ThenInclude(mp => mp.Patient)
             .Where(m => medicationIds.Contains(m.Id))
             .ToDictionaryAsync(m => m.Id, m => m, cancellationToken);
 
@@ -55,11 +56,19 @@ public class GetReplenishmentRequestsQueryHandler : IRequestHandler<GetReplenish
         var medication = medications.GetValueOrDefault(request.MedicationId);
         var requestedBy = users.GetValueOrDefault(request.RequestedBy);
 
+        // Pegar o primeiro paciente associado ou lista de pacientes
+        var patientNames = medication?.MedicationPatients?
+            .Select(mp => mp.Patient.Name)
+            .ToList() ?? new List<string>();
+        var patientName = patientNames.Any() 
+            ? string.Join(", ", patientNames) 
+            : "Unknown Patient";
+
         return new ReplenishmentRequestDto(
             request.Id,
             request.MedicationId,
             medication?.Name ?? "Unknown Medication",
-            medication?.Patient?.Name ?? "Unknown Patient",
+            patientName,
             request.RequestedBy,
             requestedBy?.Name ?? "Unknown User",
             request.RequestDate,

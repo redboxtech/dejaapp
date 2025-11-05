@@ -49,10 +49,10 @@ public class GetCaregiverByPatientAndTimeQueryHandler : IRequestHandler<GetCareg
         var schedules = await _context.CaregiverSchedules
             .AsNoTracking()
             .Include(s => s.Caregiver)
-            .Include(s => s.Patient)
+            .Include(s => s.CaregiverSchedulePatients)
             .Where(s => s.OwnerId == userId &&
-                       s.PatientId == request.PatientId &&
-                       s.DaysOfWeek.Contains(dayName))
+                       s.DaysOfWeek.Contains(dayName) &&
+                       s.CaregiverSchedulePatients.Any(csp => csp.PatientId == request.PatientId))
             .ToListAsync(cancellationToken);
 
         foreach (var schedule in schedules)
@@ -60,10 +60,26 @@ public class GetCaregiverByPatientAndTimeQueryHandler : IRequestHandler<GetCareg
             if (TimeSpan.TryParse(schedule.StartTime, out var startTime) &&
                 TimeSpan.TryParse(schedule.EndTime, out var endTime))
             {
-                // Check if medication time is within schedule range
-                if (medicationTime >= startTime && medicationTime <= endTime)
+                // Check if the period crosses midnight (endTime <= startTime)
+                // Example: 19:00 to 08:00 means from 19:00 to 23:59 OR from 00:00 to 08:00
+                bool crossesMidnight = endTime <= startTime;
+
+                if (crossesMidnight)
                 {
-                    return schedule.Caregiver?.Name;
+                    // Night period: medication time is valid if it's >= startTime (e.g., 19:00) 
+                    // OR <= endTime (e.g., 08:00)
+                    if (medicationTime >= startTime || medicationTime <= endTime)
+                    {
+                        return schedule.Caregiver?.Name;
+                    }
+                }
+                else
+                {
+                    // Normal period: medication time must be between startTime and endTime
+                    if (medicationTime >= startTime && medicationTime <= endTime)
+                    {
+                        return schedule.Caregiver?.Name;
+                    }
                 }
             }
         }

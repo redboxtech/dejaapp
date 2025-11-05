@@ -25,60 +25,18 @@ public class AddMedicationCommandHandler : IRequestHandler<AddMedicationCommand,
 
         var userId = _currentUserService.UserId.Value;
 
-        // 1. Check if patient exists and user has access (owner or shared)
-        var patient = await _context.Patients
-            .FirstOrDefaultAsync(p => p.Id == request.PatientId, cancellationToken);
-
-        if (patient == null || (patient.OwnerId != userId && !patient.SharedWith.Contains(userId)))
-        {
-            throw new UnauthorizedAccessException("Patient not found or user does not have access.");
-        }
-
-        // 2. Verify prescription if provided
-        if (request.PrescriptionId.HasValue)
-        {
-            var prescription = await _context.Prescriptions
-                .FirstOrDefaultAsync(p => p.Id == request.PrescriptionId.Value, cancellationToken);
-            
-            if (prescription == null)
-            {
-                throw new Exception("Prescription not found.");
-            }
-            
-            if (prescription.PatientId != request.PatientId)
-            {
-                throw new Exception("Prescription does not belong to the selected patient.");
-            }
-            
-            if (prescription.OwnerId != userId && patient.OwnerId != userId && !patient.SharedWith.Contains(userId))
-            {
-                throw new UnauthorizedAccessException("User does not have access to this prescription.");
-            }
-        }
-
-        // 3. Create Medication entity (handles initial stock movement)
+        // Criar entidade Medication (apenas informações da medicação, sem posologia)
+        // A posologia será adicionada posteriormente através do comando AddMedicationToPatient
         var entity = new Medication(
             request.Name,
             request.Dosage,
             request.DosageUnit,
             request.PresentationForm,
-            request.PatientId,
             request.Route,
-            request.Frequency,
-            request.Times,
-            request.IsHalfDose,
-            request.CustomFrequency,
-            request.IsExtra,
-            request.TreatmentType,
-            request.TreatmentStartDate,
-            request.TreatmentEndDate,
-            request.HasTapering,
             request.InitialStock, // Estoque inicial será registrado como movimentação
-            request.DailyConsumption,
             request.BoxQuantity,
             request.Instructions,
-            userId,
-            request.PrescriptionId
+            userId
         );
 
         _context.Medications.Add(entity);

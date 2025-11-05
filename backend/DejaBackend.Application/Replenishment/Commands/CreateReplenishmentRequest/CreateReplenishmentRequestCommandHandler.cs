@@ -25,8 +25,10 @@ public class CreateReplenishmentRequestCommandHandler : IRequestHandler<CreateRe
 
         var userId = _currentUserService.UserId.Value;
 
-        // 1. Check if medication exists and user has access
+        // 1. Verificar se a medicação existe e o usuário tem acesso
         var medication = await _context.Medications
+            .Include(m => m.MedicationPatients)
+                .ThenInclude(mp => mp.Patient)
             .FirstOrDefaultAsync(m => m.Id == request.MedicationId, cancellationToken);
 
         if (medication == null)
@@ -34,13 +36,21 @@ public class CreateReplenishmentRequestCommandHandler : IRequestHandler<CreateRe
             throw new Exception("Medication not found.");
         }
 
-        // Check if user has access (owner or shared patient)
-        var patient = await _context.Patients
-            .FirstOrDefaultAsync(p => p.Id == medication.PatientId, cancellationToken);
-
-        if (patient == null || (patient.OwnerId != userId && !patient.SharedWith.Contains(userId)))
+        // Verificar se o usuário tem acesso (owner ou paciente compartilhado)
+        // Verificar se o usuário é o dono OU se tem acesso a pelo menos um paciente associado
+        bool hasAccess = medication.OwnerId == userId;
+        
+        if (!hasAccess)
         {
-            throw new UnauthorizedAccessException("Medication not found or user does not have access.");
+            // Verificar se tem acesso a algum paciente associado
+            var accessiblePatients = medication.MedicationPatients
+                .Where(mp => mp.Patient.OwnerId == userId || mp.Patient.SharedWith.Contains(userId))
+                .Any();
+            
+            if (!accessiblePatients)
+            {
+                throw new UnauthorizedAccessException("Medication not found or user does not have access.");
+            }
         }
 
         // 2. Create the request

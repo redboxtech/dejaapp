@@ -24,6 +24,7 @@ public class UpdateMedicationCommandHandler : IRequestHandler<UpdateMedicationCo
 
         var entity = await _context.Medications
             .Include(m => m.Movements) // Incluir movimentações para calcular estoque atual
+            .Include(m => m.MedicationPatients) // Incluir pacientes associados
             .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
 
         if (entity == null)
@@ -37,22 +38,14 @@ public class UpdateMedicationCommandHandler : IRequestHandler<UpdateMedicationCo
             throw new UnauthorizedAccessException("Only the owner can update this medication.");
         }
 
+        // Atualizar apenas informações da medicação (sem posologia)
+        // A posologia está em MedicationPatient e deve ser atualizada separadamente
         entity.UpdateDetails(
             request.Name,
             request.Dosage,
             request.DosageUnit,
             request.PresentationForm,
             request.Route,
-            request.Frequency,
-            request.Times,
-            request.IsHalfDose ?? entity.IsHalfDose,
-            request.CustomFrequency ?? entity.CustomFrequency,
-            request.IsExtra ?? entity.IsExtra,
-            request.TreatmentType ?? entity.TreatmentType, // Usar valor existente se não fornecido
-            request.TreatmentStartDate,
-            request.TreatmentEndDate,
-            request.HasTapering,
-            request.DailyConsumption,
             request.BoxQuantity,
             request.Instructions
         );

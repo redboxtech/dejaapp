@@ -64,20 +64,35 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     const [hours, minutes] = time.split(":").map(Number);
     const medicationTime = hours * 60 + minutes;
 
-    const schedule = schedules.find(s => 
+    // Encontrar todas as escalas do paciente para o dia atual
+    const matchingSchedules = schedules.filter(s => 
       s.patientId === patientId &&
       s.daysOfWeek.includes(currentDayName)
     );
 
-    if (!schedule) return null;
+    if (matchingSchedules.length === 0) return null;
 
-    const [startHours, startMinutes] = schedule.startTime.split(":").map(Number);
-    const [endHours, endMinutes] = schedule.endTime.split(":").map(Number);
-    const startTime = startHours * 60 + startMinutes;
-    const endTime = endHours * 60 + endMinutes;
+    // Verificar cada escala para ver se o horário está dentro do período
+    for (const schedule of matchingSchedules) {
+      const [startHours, startMinutes] = schedule.startTime.split(":").map(Number);
+      const [endHours, endMinutes] = schedule.endTime.split(":").map(Number);
+      const startTime = startHours * 60 + startMinutes;
+      const endTime = endHours * 60 + endMinutes;
 
-    if (medicationTime >= startTime && medicationTime <= endTime) {
-      return schedule.caregiverName;
+      // Verificar se o período atravessa meia-noite (endTime <= startTime)
+      const crossesMidnight = endTime <= startTime;
+
+      if (crossesMidnight) {
+        // Período noturno: 19:00 às 08:00 significa de 19:00 até 23:59 OU de 00:00 até 08:00
+        if (medicationTime >= startTime || medicationTime <= endTime) {
+          return schedule.caregiverName;
+        }
+      } else {
+        // Período normal: 08:00 às 15:00
+        if (medicationTime >= startTime && medicationTime <= endTime) {
+          return schedule.caregiverName;
+        }
+      }
     }
 
     return null;
@@ -148,12 +163,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       items = pendingInCurrent;
     } else {
       const nextPeriod = nextOf(currentPeriod);
-      currentTitle = titleMap[nextPeriod];
-      items = periodToItems[nextPeriod];
+      // Se estamos na noite e não há mais medicações pendentes, mostrar manhã do dia seguinte
+      if (currentPeriod === "night") {
+        currentTitle = "Manhã (Próximo Dia)";
+        items = periodToItems["morning"];
+      } else {
+        currentTitle = titleMap[nextPeriod];
+        items = periodToItems[nextPeriod];
+      }
     }
 
     return { morningMeds: morning, afternoonMeds: afternoon, nightMeds: night, visibleSectionTitle: currentTitle, visibleItems: items };
-  }, [medications]);
+  }, [medications, patients]);
 
   const criticalStocks = useMemo(() => {
     return stockItems
@@ -354,9 +375,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   // Agrupar medicações por paciente
                   const groupedByPatient = visibleItems.reduce((acc, med) => {
                     if (!acc[med.patientId]) {
+                      // Buscar nome do paciente na lista de pacientes se med.patient estiver vazio
+                      const patient = patients.find(p => p.id === med.patientId);
+                      const patientName = med.patient || patient?.name || "Paciente desconhecido";
+                      
                       acc[med.patientId] = {
                         patientId: med.patientId,
-                        patientName: med.patient,
+                        patientName: patientName,
                         medications: [],
                         caregiver: null as string | null
                       };
@@ -376,38 +401,38 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
                   return patientGroups.map((group) => (
                     <div key={group.patientId} className="border border-gray-200 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => {
-                          const newExpanded = new Set(expandedPatients);
-                          if (newExpanded.has(group.patientId)) {
-                            newExpanded.delete(group.patientId);
-                          } else {
-                            newExpanded.add(group.patientId);
-                          }
-                          setExpandedPatients(newExpanded);
-                        }}
-                        className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3 flex-1 text-left">
-                          <Users className="h-5 w-5 text-[#16808c]" />
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900">{group.patientName}</div>
-                            {group.caregiver && (
-                              <div className="text-xs text-gray-500">Cuidador: {group.caregiver}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
+                      <div className="w-full p-3 flex items-center justify-between bg-white">
+                        <div className="flex items-center gap-3 flex-1">
+                          <Users className="h-5 w-5 text-[#16808c] flex-shrink-0" />
+                          <span className="font-medium text-gray-900">{group.patientName}</span>
                           <Badge variant="outline" className="text-xs">
-                            {group.medications.length} medicação{group.medications.length > 1 ? "ões" : ""}
+                            {group.medications.length} {group.medications.length === 1 ? "medicação" : "medicações"}
                           </Badge>
-                          {expandedPatients.has(group.patientId) ? (
-                            <ChevronUp className="h-4 w-4 text-gray-400" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                          {group.caregiver && (
+                            <span className="text-xs text-gray-500 ml-2">Cuidador: {group.caregiver}</span>
                           )}
                         </div>
-                      </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              const newExpanded = new Set(expandedPatients);
+                              if (newExpanded.has(group.patientId)) {
+                                newExpanded.delete(group.patientId);
+                              } else {
+                                newExpanded.add(group.patientId);
+                              }
+                              setExpandedPatients(newExpanded);
+                            }}
+                            className="hover:bg-gray-50 p-1 rounded transition-colors"
+                          >
+                            {expandedPatients.has(group.patientId) ? (
+                              <ChevronUp className="h-4 w-4 text-gray-400" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-gray-400" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
                       
                       {expandedPatients.has(group.patientId) && (
                         <div className="border-t border-gray-200 bg-gray-50">

@@ -4,11 +4,15 @@ public record CaregiverScheduleDto(
     Guid Id,
     Guid CaregiverId,
     string CaregiverName,
-    Guid PatientId,
-    string PatientName,
+    List<PatientInfo> Patients, // Mudado de PatientId/PatientName para lista de pacientes
     List<string> DaysOfWeek,
     string StartTime,
     string EndTime,
     DateTime CreatedAt
+);
+
+public record PatientInfo(
+    Guid PatientId,
+    string PatientName
 );
 

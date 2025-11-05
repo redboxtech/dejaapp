@@ -36,19 +36,29 @@ public class AddCaregiverScheduleCommandHandler : IRequestHandler<AddCaregiverSc
             throw new ArgumentException("Caregiver not found or user does not have access.");
         }
 
-        // Verify patient exists and belongs to user
-        var patient = await _context.Patients
-            .FirstOrDefaultAsync(p => p.Id == request.PatientId && 
-                (p.OwnerId == userId || p.SharedWith.Contains(userId)), cancellationToken);
+        // Verify all patients exist and belong to user
+        // Buscar todos os pacientes primeiro e verificar acesso em memória (SharedWith pode ter problemas com Contains em SQL)
+        var allPatients = await _context.Patients
+            .Where(p => request.PatientIds.Contains(p.Id))
+            .ToListAsync(cancellationToken);
 
-        if (patient == null)
+        if (allPatients.Count != request.PatientIds.Count)
         {
-            throw new ArgumentException("Patient not found or user does not have access.");
+            throw new ArgumentException("One or more patients not found.");
+        }
+
+        // Verificar acesso em memória para todos os pacientes
+        foreach (var patient in allPatients)
+        {
+            if (patient.OwnerId != userId && (patient.SharedWith == null || !patient.SharedWith.Contains(userId)))
+            {
+                throw new ArgumentException($"Patient '{patient.Name}' not found or user does not have access.");
+            }
         }
 
         var schedule = new CaregiverSchedule(
             request.CaregiverId,
-            request.PatientId,
+            request.PatientIds,
             request.DaysOfWeek,
             request.StartTime,
             request.EndTime,

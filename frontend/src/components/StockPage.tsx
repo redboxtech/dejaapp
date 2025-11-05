@@ -109,11 +109,20 @@ export function StockPage() {
   };
 
   const getProgressValue = (current: number, dailyConsumption: number) => {
+    // Validar valores numéricos
+    const currentNum = typeof current === 'number' ? current : parseFloat(String(current || 0));
+    const dailyConsumptionNum = typeof dailyConsumption === 'number' ? dailyConsumption : parseFloat(String(dailyConsumption || 0));
+    
+    // Verificar se são números válidos
+    if (isNaN(currentNum) || isNaN(dailyConsumptionNum)) return 0;
+    
     // Calcular consumo mensal (30 dias)
-    const monthlyConsumption = dailyConsumption * 30;
+    const monthlyConsumption = dailyConsumptionNum * 30;
     if (monthlyConsumption === 0) return 0;
+    
     // Calcular porcentagem baseada no consumo mensal (pode ser acima de 100%)
-    return (current / monthlyConsumption) * 100;
+    const percentage = (currentNum / monthlyConsumption) * 100;
+    return isNaN(percentage) ? 0 : percentage;
   };
 
   const getUnitLabel = (unit: string) => {

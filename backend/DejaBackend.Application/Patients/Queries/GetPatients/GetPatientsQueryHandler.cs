@@ -35,14 +35,15 @@ public class GetPatientsQueryHandler : IRequestHandler<GetPatientsQuery, List<Pa
             .Where(p => p.OwnerId == userId || p.SharedWith.Contains(userId))
             .ToList();
 
-        // Buscar medicações dos pacientes acessíveis e agrupar em memória
+        // Buscar medicações dos pacientes acessíveis através de MedicationPatients
         var patientIds = patients.Select(p => p.Id).ToList();
         var meds = await _context.Medications
             .AsNoTracking()
-            .Where(m => patientIds.Contains(m.PatientId))
+            .Include(m => m.MedicationPatients)
+            .Where(m => m.MedicationPatients.Any(mp => patientIds.Contains(mp.PatientId)))
             .ToListAsync(cancellationToken);
 
-        return patients.Select(p => MapToDto(p, meds.Where(m => m.PatientId == p.Id).ToList(), userId)).ToList();
+        return patients.Select(p => MapToDto(p, meds.Where(m => m.MedicationPatients.Any(mp => mp.PatientId == p.Id)).ToList(), userId)).ToList();
     }
 
     private PatientDto MapToDto(Patient patient, List<Medication> medications, Guid currentUserId)

@@ -117,6 +117,23 @@ interface DataContextType {
   deletePatient: (id: string) => void;
   sharePatientWith: (patientId: string, representativeEmail: string) => Promise<boolean>;
   addMedication: (medication: Omit<Medication, "id" | "ownerId">) => void;
+  addMedicationToPatient: (
+    medicationId: string,
+    patientId: string,
+    posology: {
+      frequency: string;
+      times: string[];
+      isHalfDose: boolean;
+      customFrequency?: string;
+      isExtra: boolean;
+      treatmentType: TreatmentType;
+      treatmentStartDate: string;
+      treatmentEndDate?: string;
+      hasTapering: boolean;
+      dailyConsumption: number;
+      prescriptionId?: string;
+    }
+  ) => Promise<void>;
   updateMedication: (id: string, medication: Partial<Medication>) => void;
   deleteMedication: (id: string) => void;
   addStockEntry: (medicationId: string, quantity: number, source: string, price?: number | null, totalInstallments?: number | null) => void;
@@ -171,7 +188,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       
       // Mapear TreatmentType do backend (enum 0/1) para strings do frontend
       // O status já vem calculado do backend usando os thresholds dinâmicos
-      const mappedMedications = (medicationsRes || []).map((med: any) => {
+      // O backend agora retorna uma lista de Patients em vez de um único patientId/patient
+      // Precisamos criar uma entrada de medicação para cada paciente associado
+      const mappedMedications: Medication[] = [];
+      
+      (medicationsRes || []).forEach((med: any) => {
         // Mapear TreatmentType
         const treatmentType = med.treatmentType === 0 || med.treatmentType === "Continuous" ? "continuo" : 
                                med.treatmentType === 1 || med.treatmentType === "Temporary" ? "temporario" : 
@@ -193,15 +214,46 @@ export function DataProvider({ children }: { children: ReactNode }) {
           }
         }
         
-        return {
-          ...med,
-          treatmentType,
-          status,
-          isHalfDose: med.isHalfDose ?? false,
-          customFrequency: med.customFrequency ?? undefined,
-          isExtra: med.isExtra ?? false
-        };
+        // Compatibilidade: Se med.Patients existe (nova estrutura), criar uma entrada por paciente
+        // Se med.patientId existe (estrutura antiga), usar ela
+        // O backend retorna Patients (com P maiúsculo) ou patients (com p minúsculo)
+        const patientsList = med.Patients || med.patients || [];
+        
+        if (Array.isArray(patientsList) && patientsList.length > 0) {
+          // Nova estrutura: criar uma entrada para cada paciente
+          patientsList.forEach((patientInfo: any) => {
+            const patientId = patientInfo.PatientId || patientInfo.patientId;
+            const patientName = patientInfo.PatientName || patientInfo.patientName;
+            const dailyConsumption = patientInfo.DailyConsumption || patientInfo.dailyConsumption || med.totalDailyConsumption || med.TotalDailyConsumption || 0;
+            
+            if (patientId) {
+              mappedMedications.push({
+                ...med,
+                patientId: String(patientId), // Garantir que seja string
+                patient: patientName || "",
+                dailyConsumption: dailyConsumption,
+                treatmentType,
+                status,
+                isHalfDose: med.isHalfDose ?? false,
+                customFrequency: med.customFrequency ?? undefined,
+                isExtra: med.isExtra ?? false
+              });
+            }
+          });
+        } else if (med.patientId) {
+          // Estrutura antiga (compatibilidade)
+          mappedMedications.push({
+            ...med,
+            patientId: String(med.patientId), // Garantir que seja string
+            treatmentType,
+            status,
+            isHalfDose: med.isHalfDose ?? false,
+            customFrequency: med.customFrequency ?? undefined,
+            isExtra: med.isExtra ?? false
+          });
+        }
       });
+      
       setMedications(mappedMedications);
       
       setReplenishmentRequests(requestsRes || []);
@@ -287,36 +339,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addMedication = async (medication: Omit<Medication, "id" | "ownerId">) => {
     try {
-      const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
-      const normalizedTimes = (medication.times || [])
-        .flatMap(t => (typeof t === 'string' ? t.split(/[;,]/) : [t]))
-        .map(t => String(t).trim())
-        .filter(Boolean);
-      const startDate = medication.treatmentStartDate && medication.treatmentStartDate.length > 0
-        ? medication.treatmentStartDate
-        : new Date().toISOString().split('T')[0];
+      // Adicionar apenas informações da medicação (sem posologia)
+      // A posologia será adicionada posteriormente através de addMedicationToPatient
       const body = {
         name: medication.name,
         dosage: medication.dosage,
         dosageUnit: medication.dosageUnit || medication.unit, // Priorizar dosageUnit, usar unit como fallback
         presentationForm: medication.presentationForm || (medication.unit && ["comprimido", "capsula", "gotas", "aplicacao", "inalacao", "ampola", "xarope", "suspensao"].includes(medication.unit) ? medication.unit : "comprimido"), // Inferir presentationForm do unit antigo se necessário
-        unit: medication.unit, // Mantido para compatibilidade
-        patientId: medication.patientId,
         route: medication.route,
-        frequency: medication.frequency,
-        times: normalizedTimes,
-        isHalfDose: medication.isHalfDose ?? false,
-        customFrequency: medication.customFrequency || null,
-        isExtra: medication.isExtra ?? false,
-        treatmentType: treatmentTypeMap[medication.treatmentType] ?? 0,
-        treatmentStartDate: startDate,
-        treatmentEndDate: medication.treatmentEndDate || null,
-        hasTapering: medication.hasTapering,
         initialStock: medication.currentStock, // Estoque inicial será registrado como movimentação
-        dailyConsumption: medication.dailyConsumption,
         boxQuantity: medication.boxQuantity,
         instructions: medication.instructions || "",
-        prescriptionId: medication.prescriptionId || null,
       };
       await apiFetch(`/medications`, {
         method: 'POST',
@@ -325,6 +358,53 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await loadFromApi();
     } catch (e) {
       console.error('Erro ao adicionar medicação', e);
+      throw e;
+    }
+  };
+
+  const addMedicationToPatient = async (
+    medicationId: string,
+    patientId: string,
+    posology: {
+      frequency: string;
+      times: string[];
+      isHalfDose: boolean;
+      customFrequency?: string;
+      isExtra: boolean;
+      treatmentType: TreatmentType;
+      treatmentStartDate: string;
+      treatmentEndDate?: string;
+      hasTapering: boolean;
+      dailyConsumption: number;
+      prescriptionId?: string;
+    }
+  ) => {
+    try {
+      const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
+      const normalizedTimes = (posology.times || []).map((t) => t.trim()).filter(Boolean);
+      const body = {
+        medicationId,
+        patientId,
+        frequency: posology.frequency,
+        times: normalizedTimes,
+        isHalfDose: posology.isHalfDose ?? false,
+        customFrequency: posology.customFrequency || null,
+        isExtra: posology.isExtra ?? false,
+        treatmentType: treatmentTypeMap[posology.treatmentType] ?? 0,
+        treatmentStartDate: posology.treatmentStartDate,
+        treatmentEndDate: posology.treatmentEndDate || null,
+        hasTapering: posology.hasTapering,
+        dailyConsumption: posology.dailyConsumption,
+        prescriptionId: posology.prescriptionId || null,
+      };
+      await apiFetch(`/medications/add-to-patient`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      await loadFromApi();
+    } catch (e) {
+      console.error('Erro ao adicionar medicação ao paciente', e);
+      throw e;
     }
   };
 
@@ -427,6 +507,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     deletePatient,
     sharePatientWith,
     addMedication,
+    addMedicationToPatient,
     updateMedication,
     deleteMedication,
     addStockEntry,

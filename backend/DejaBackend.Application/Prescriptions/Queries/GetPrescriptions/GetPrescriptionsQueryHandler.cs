@@ -36,13 +36,21 @@ public class GetPrescriptionsQueryHandler : IRequestHandler<GetPrescriptionsQuer
             .ToList();
 
         // 2. Buscar receitas dos pacientes acessíveis ou do próprio usuário
+        // Medications agora está em MedicationPatient, não mais em Prescription
         var prescriptions = await _context.Prescriptions
             .Include(p => p.Patient)
-            .Include(p => p.Medications)
             .AsNoTracking()
             .Where(p => p.OwnerId == userId || accessiblePatientIds.Contains(p.PatientId))
             .OrderByDescending(p => p.UploadedAt)
             .ToListAsync(cancellationToken);
+
+        // Buscar contagem de medicações associadas através de MedicationPatients
+        var prescriptionIds = prescriptions.Select(p => p.Id).ToList();
+        var medicationCounts = await _context.MedicationPatients
+            .AsNoTracking()
+            .Where(mp => prescriptionIds.Contains(mp.PrescriptionId ?? Guid.Empty))
+            .GroupBy(mp => mp.PrescriptionId)
+            .ToDictionaryAsync(g => g.Key ?? Guid.Empty, g => g.Count(), cancellationToken);
 
         return prescriptions.Select(p => new PrescriptionDto(
             p.Id,
@@ -61,7 +69,7 @@ public class GetPrescriptionsQueryHandler : IRequestHandler<GetPrescriptionsQuer
             p.Patient.Name,
             p.OwnerId,
             p.UploadedAt,
-            p.Medications.Count
+            medicationCounts.GetValueOrDefault(p.Id, 0)
         )).ToList();
     }
 }

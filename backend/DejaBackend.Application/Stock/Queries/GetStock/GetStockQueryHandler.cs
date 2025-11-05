@@ -36,7 +36,8 @@ public class GetStockQueryHandler : IRequestHandler<GetStockQuery, List<StockIte
 
         var medications = await _context.Medications
             .AsNoTracking()
-            .Include(m => m.Patient)
+            .Include(m => m.MedicationPatients)
+                .ThenInclude(mp => mp.Patient)
             .Include(m => m.Movements) // Incluir movimentações para calcular estoque atual
             .Where(m => m.OwnerId == userId)
             .ToListAsync(cancellationToken);
@@ -45,9 +46,9 @@ public class GetStockQueryHandler : IRequestHandler<GetStockQuery, List<StockIte
             m.Id,
             $"{m.Name} {(m.Dosage % 1 == 0 ? m.Dosage.ToString("0") : m.Dosage.ToString("0.##"))} {m.DosageUnit}",
             m.Id,
-            m.Patient?.Name ?? string.Empty,
+            string.Join(", ", m.MedicationPatients.Select(mp => mp.Patient.Name)), // Lista de pacientes separados por vírgula
             m.CurrentStock,
-            m.DailyConsumption,
+            m.TotalDailyConsumption, // Consumo total = soma de todos os pacientes
             m.DaysLeft,
             DateOnly.FromDateTime(DateTime.UtcNow.AddDays(m.DaysLeft)).ToString("yyyy-MM-dd"),
             m.BoxQuantity,

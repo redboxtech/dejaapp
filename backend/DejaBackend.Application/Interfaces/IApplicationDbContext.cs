@@ -7,6 +7,7 @@ public interface IApplicationDbContext
 {
     DbSet<Patient> Patients { get; }
     DbSet<Medication> Medications { get; }
+    DbSet<MedicationPatient> MedicationPatients { get; }
     DbSet<StockMovement> StockMovements { get; }
     DbSet<ReplenishmentRequest> ReplenishmentRequests { get; }
     DbSet<User> Users { get; }
@@ -15,6 +16,7 @@ public interface IApplicationDbContext
     DbSet<Prescription> Prescriptions { get; }
     DbSet<AlertSettings> AlertSettings { get; }
     DbSet<CaregiverSchedule> CaregiverSchedules { get; }
+    DbSet<CaregiverSchedulePatient> CaregiverSchedulePatients { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

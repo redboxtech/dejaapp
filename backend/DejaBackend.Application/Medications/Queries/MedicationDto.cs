@@ -10,8 +10,8 @@ public record MedicationDto(
     string DosageUnit, // Unidade de medida da dosagem (mg, g, ml, etc.)
     string PresentationForm, // Forma de apresentação (comprimido, cápsula, gotas, etc.)
     string Unit, // Mantido para compatibilidade - será removido depois
-    Guid PatientId,
-    string PatientName, // Added for convenience
+    // Lista de pacientes associados à medicação com seus consumos individuais
+    List<PatientMedicationInfo> Patients,
     string Route,
     string Frequency,
     List<string> Times,
@@ -24,7 +24,7 @@ public record MedicationDto(
     bool HasTapering,
     // TaperingSchedule is complex, simplifying for now
     decimal CurrentStock,
-    decimal DailyConsumption,
+    decimal TotalDailyConsumption, // Consumo total = soma de todos os pacientes
     int DaysLeft,
     decimal BoxQuantity,
     string Status, // Status como string (ok, warning, critical)
@@ -32,4 +32,13 @@ public record MedicationDto(
     Guid OwnerId,
     Guid? PrescriptionId, // ID da receita associada (opcional)
     List<TaperingPhaseData>? TaperingSchedule // Adicionado
+);
+
+/// <summary>
+/// Informações de um paciente associado à medicação
+/// </summary>
+public record PatientMedicationInfo(
+    Guid PatientId,
+    string PatientName,
+    decimal DailyConsumption // Consumo diário específico deste paciente
 );

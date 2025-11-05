@@ -4,7 +4,7 @@ namespace DejaBackend.Application.CaregiverSchedules.Commands.AddCaregiverSchedu
 
 public record AddCaregiverScheduleCommand(
     Guid CaregiverId,
-    Guid PatientId,
+    List<Guid> PatientIds, // Mudado de PatientId para PatientIds (lista)
     List<string> DaysOfWeek,
     string StartTime,
     string EndTime

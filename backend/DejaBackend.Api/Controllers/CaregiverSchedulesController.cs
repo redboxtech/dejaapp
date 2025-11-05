@@ -22,7 +22,7 @@ public class CaregiverSchedulesController : ControllerBase
 
     public record CreateCaregiverScheduleRequest(
         Guid CaregiverId,
-        Guid PatientId,
+        List<Guid> PatientIds, // Mudado de PatientId para PatientIds (lista)
         List<string> DaysOfWeek,
         string StartTime,
         string EndTime
@@ -30,7 +30,7 @@ public class CaregiverSchedulesController : ControllerBase
 
     public record UpdateCaregiverScheduleRequest(
         Guid CaregiverId,
-        Guid PatientId,
+        List<Guid> PatientIds, // Mudado de PatientId para PatientIds (lista)
         List<string> DaysOfWeek,
         string StartTime,
         string EndTime
@@ -67,7 +67,7 @@ public class CaregiverSchedulesController : ControllerBase
         {
             var command = new AddCaregiverScheduleCommand(
                 req.CaregiverId,
-                req.PatientId,
+                req.PatientIds,
                 req.DaysOfWeek,
                 req.StartTime,
                 req.EndTime
@@ -101,7 +101,7 @@ public class CaregiverSchedulesController : ControllerBase
             var command = new UpdateCaregiverScheduleCommand(
                 id,
                 req.CaregiverId,
-                req.PatientId,
+                req.PatientIds,
                 req.DaysOfWeek,
                 req.StartTime,
                 req.EndTime
