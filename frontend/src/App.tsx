@@ -5,10 +5,12 @@ import { DashboardLayout } from "./components/DashboardLayout";
 import { Dashboard } from "./components/Dashboard";
 import { PatientsPage } from "./components/PatientsPage";
 import { MedicationsPage } from "./components/MedicationsPage";
+import { PrescriptionsPage } from "./components/PrescriptionsPage";
 import { StockPage } from "./components/StockPage";
 import { AlertsPage } from "./components/AlertsPage";
 import { ReplenishmentPage } from "./components/ReplenishmentPage";
 import { ProfilePage } from "./components/ProfilePage";
+import { CaregiverSchedulesPage } from "./components/CaregiverSchedulesPage";
 import { Toaster } from "./components/ui/sonner";
 import { DataProvider } from "./components/DataContext";
 import { AuthProvider, useAuth } from "./components/AuthContext";
@@ -67,24 +69,16 @@ function AppContent() {
         return <PatientsPage onNavigate={handleNavigate} />;
       case "medications":
         return <MedicationsPage />;
+      case "prescriptions":
+        return <PrescriptionsPage />;
       case "stock":
         return <StockPage />;
       case "alerts":
         return <AlertsPage />;
       case "replenishment":
         return <ReplenishmentPage />;
-      case "settings":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-[#16808c]">Configurações</h1>
-              <p className="text-gray-600 mt-1">Gerencie as configurações do sistema</p>
-            </div>
-            <div className="text-center py-12 text-gray-500">
-              Em desenvolvimento...
-            </div>
-          </div>
-        );
+      case "caregiver-schedules":
+        return <CaregiverSchedulesPage />;
       default:
         return <Dashboard onNavigate={handleNavigate} />;
     }
