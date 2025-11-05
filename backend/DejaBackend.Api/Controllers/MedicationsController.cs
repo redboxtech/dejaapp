@@ -88,7 +88,7 @@ public class MedicationsController : ControllerBase
         catch (UnauthorizedAccessException)
         {
             return Unauthorized();
-<<<<<<< HEAD:backend/DejaBackend.Api/Controllers/MedicationsController.cs
+
         }
         catch (Exception)
         {
@@ -110,12 +110,10 @@ public class MedicationsController : ControllerBase
         catch (UnauthorizedAccessException)
         {
             return Unauthorized();
-=======
->>>>>>> master:DejaBackend/DejaBackend.Api/Controllers/MedicationsController.cs
+
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-<<<<<<< HEAD:backend/DejaBackend.Api/Controllers/MedicationsController.cs
             return BadRequest(new { message = ex.Message });
         }
     }
@@ -148,9 +146,7 @@ public class MedicationsController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
-=======
-            return BadRequest(new { message = "An error occurred while updating the medication." });
->>>>>>> master:DejaBackend/DejaBackend.Api/Controllers/MedicationsController.cs
+
         }
     }
 

@@ -467,9 +467,17 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     return acc;
                   }, {} as Record<string, { patientId: string; patientName: string; medications: typeof visibleItems; caregiver: string | null }>);
 
-                  const patientGroups = Object.values(groupedByPatient);
+                  type PatientGroup = {
+                    patientId: string;
+                    patientName: string;
+                    medications: typeof visibleItems;
+                    caregiver: string | null;
+                  };
+                  const patientGroups = Object.values(
+                    groupedByPatient
+                  ) as PatientGroup[];
 
-                  return patientGroups.map((group) => (
+                  return patientGroups.map((group: PatientGroup) => (
                     <div
                       key={group.patientId}
                       className="border border-gray-200 rounded-lg overflow-hidden"

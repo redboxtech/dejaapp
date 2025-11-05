@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { apiFetch } from "../lib/api";
@@ -396,14 +396,20 @@ export function MedicationsPage() {
   const getUnitLabel = (unit: MedicationUnit) => {
     const labels: Record<MedicationUnit, string> = {
       comprimido: "comp",
+      capsula: "caps",
       ml: "ml",
       gotas: "gts",
       mg: "mg",
       g: "g",
+      mcg: "mcg",
+      ui: "UI",
       aplicacao: "apl",
       inalacao: "inal",
-    };
-    return labels[unit] || unit;
+      ampola: "amp",
+      xarope: "xar",
+      suspensao: "susp",
+    } as const;
+    return labels[unit] || (unit as string);
   };
 
   return (

@@ -1,4 +1,4 @@
-import { ReactNode, useState, useMemo } from "react";
+import React, { ReactNode, useState, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Logo } from "./Logo";
 import { Footer } from "./Footer";
