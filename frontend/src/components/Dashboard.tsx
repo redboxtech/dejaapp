@@ -1,24 +1,26 @@
-import { useMemo, useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import React, { useMemo, useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Progress } from "./ui/progress";
-import { 
-  Users, 
-  Pill, 
-  AlertTriangle, 
-  Clock, 
-  Package,
+import {
+  Users,
+  Pill,
+  AlertTriangle,
+  Clock,
   AlertCircle,
-  TrendingUp,
-  TrendingDown,
   DollarSign,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useData } from "./DataContext";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "../lib/api";
 
 interface DashboardProps {
   onNavigate: (page: string, id?: string) => void;
@@ -37,14 +39,24 @@ interface CaregiverSchedule {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { patients, medications, stockItems, replenishmentRequests, monthlyExpenses } = useData();
+  const {
+    patients,
+    medications,
+    stockItems,
+    replenishmentRequests,
+    monthlyExpenses,
+  } = useData();
   const [schedules, setSchedules] = useState<CaregiverSchedule[]>([]);
-  const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
+  const [expandedPatients, setExpandedPatients] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
     const loadSchedules = async () => {
       try {
-        const schedulesData = await apiFetch<CaregiverSchedule[]>(`/caregiver-schedules`);
+        const schedulesData = await apiFetch<CaregiverSchedule[]>(
+          `/caregiver-schedules`
+        );
         setSchedules(schedulesData || []);
       } catch (error) {
         console.error("Erro ao carregar escalas:", error);
@@ -53,11 +65,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     loadSchedules();
   }, []);
 
-  const getCaregiverForPatientAndTime = (patientId: string, time: string): string | null => {
+  const getCaregiverForPatientAndTime = (
+    patientId: string,
+    time: string
+  ): string | null => {
     const now = new Date();
     const dayOfWeek = now.getDay(); // 0 = Domingo, 1 = Segunda, etc.
-    
-    const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+    const dayNames = [
+      "Domingo",
+      "Segunda",
+      "Terça",
+      "Quarta",
+      "Quinta",
+      "Sexta",
+      "Sábado",
+    ];
     const currentDayName = dayNames[dayOfWeek];
 
     // Parse time (HH:mm format)
@@ -65,16 +88,17 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     const medicationTime = hours * 60 + minutes;
 
     // Encontrar todas as escalas do paciente para o dia atual
-    const matchingSchedules = schedules.filter(s => 
-      s.patientId === patientId &&
-      s.daysOfWeek.includes(currentDayName)
+    const matchingSchedules = schedules.filter(
+      (s) => s.patientId === patientId && s.daysOfWeek.includes(currentDayName)
     );
 
     if (matchingSchedules.length === 0) return null;
 
     // Verificar cada escala para ver se o horário está dentro do período
     for (const schedule of matchingSchedules) {
-      const [startHours, startMinutes] = schedule.startTime.split(":").map(Number);
+      const [startHours, startMinutes] = schedule.startTime
+        .split(":")
+        .map(Number);
       const [endHours, endMinutes] = schedule.endTime.split(":").map(Number);
       const startTime = startHours * 60 + startMinutes;
       const endTime = endHours * 60 + endMinutes;
@@ -99,7 +123,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   };
 
   // Memoized computations para performance
-  const { morningMeds, afternoonMeds, nightMeds, visibleSectionTitle, visibleItems } = useMemo(() => {
+  const {
+    morningMeds,
+    afternoonMeds,
+    nightMeds,
+    visibleSectionTitle,
+    visibleItems,
+  } = useMemo(() => {
     const parseHour = (t: string) => {
       const [h] = t.split(":");
       const n = parseInt(h || "0", 10);
@@ -111,28 +141,31 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       const mm = parseInt(m || "0", 10);
       return (isNaN(hh) ? 0 : hh) * 60 + (isNaN(mm) ? 0 : mm);
     };
-    const all = medications.flatMap(med =>
-      med.times.map(time => ({
-        patient: med.patient,
-<<<<<<< HEAD
-        patientId: med.patientId,
-=======
->>>>>>> master
-        medication: `${med.name} ${med.dosage}${med.unit === "comprimido" ? "mg" : med.unit}`,
-        time,
-        status: "pending" as const,
-      }))
-    ).sort((a, b) => a.time.localeCompare(b.time));
+    const all = medications
+      .flatMap((med) =>
+        med.times.map((time) => ({
+          patient: med.patient,
 
-    const morning = all.filter(m => {
+          patientId: med.patientId,
+
+          medication: `${med.name} ${med.dosage}${
+            med.unit === "comprimido" ? "mg" : med.unit
+          }`,
+          time,
+          status: "pending" as const,
+        }))
+      )
+      .sort((a, b) => a.time.localeCompare(b.time));
+
+    const morning = all.filter((m) => {
       const h = parseHour(m.time);
       return h >= 5 && h < 12;
     });
-    const afternoon = all.filter(m => {
+    const afternoon = all.filter((m) => {
       const h = parseHour(m.time);
       return h >= 12 && h < 18;
     });
-    const night = all.filter(m => {
+    const night = all.filter((m) => {
       const h = parseHour(m.time);
       return h >= 18 || h < 5;
     });
@@ -142,11 +175,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     let currentTitle = "";
     let items: typeof all = [];
 
-    const currentPeriod = now.getHours() >= 5 && now.getHours() < 12
-      ? "morning"
-      : now.getHours() >= 12 && now.getHours() < 18
-      ? "afternoon"
-      : "night";
+    const currentPeriod =
+      now.getHours() >= 5 && now.getHours() < 12
+        ? "morning"
+        : now.getHours() >= 12 && now.getHours() < 18
+        ? "afternoon"
+        : "night";
 
     const periodToItems = {
       morning,
@@ -157,16 +191,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     const nextOf = (p: "morning" | "afternoon" | "night") =>
       p === "morning" ? "afternoon" : p === "afternoon" ? "night" : "morning";
 
-    const titleMap = { morning: "Manhã", afternoon: "Tarde", night: "Noite" } as const;
+    const titleMap = {
+      morning: "Manhã",
+      afternoon: "Tarde",
+      night: "Noite",
+    } as const;
 
     const currentList = periodToItems[currentPeriod];
-    const pendingInCurrent = currentList.filter(m => parseMinutes(m.time) >= nowMinutes);
+    const pendingInCurrent = currentList.filter(
+      (m) => parseMinutes(m.time) >= nowMinutes
+    );
     if (pendingInCurrent.length > 0) {
       currentTitle = titleMap[currentPeriod];
       items = pendingInCurrent;
     } else {
       const nextPeriod = nextOf(currentPeriod);
-<<<<<<< HEAD
+
       // Se estamos na noite e não há mais medicações pendentes, mostrar manhã do dia seguinte
       if (currentPeriod === "night") {
         currentTitle = "Manhã (Próximo Dia)";
@@ -177,20 +217,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       }
     }
 
-    return { morningMeds: morning, afternoonMeds: afternoon, nightMeds: night, visibleSectionTitle: currentTitle, visibleItems: items };
+    return {
+      morningMeds: morning,
+      afternoonMeds: afternoon,
+      nightMeds: night,
+      visibleSectionTitle: currentTitle,
+      visibleItems: items,
+    };
   }, [medications, patients]);
-=======
-      currentTitle = titleMap[nextPeriod];
-      items = periodToItems[nextPeriod];
-    }
-
-    return { morningMeds: morning, afternoonMeds: afternoon, nightMeds: night, visibleSectionTitle: currentTitle, visibleItems: items };
-  }, [medications]);
->>>>>>> master
 
   const criticalStocks = useMemo(() => {
     return stockItems
-      .filter(s => s.status === "critical" || s.status === "warning")
+      .filter((s) => s.status === "critical" || s.status === "warning")
       .sort((a, b) => a.daysLeft - b.daysLeft)
       .slice(0, 3);
   }, [stockItems]);
@@ -207,7 +245,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       inalacao: "inal",
       ampola: "amp",
       xarope: "xar",
-      suspensao: "susp"
+      suspensao: "susp",
     };
     return labels[unit] || unit;
   };
@@ -219,19 +257,26 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     return [];
   }, [medications]);
 
-  const stats = useMemo(() => ({
-    totalPatients: patients.length,
-    totalMedications: medications.length,
-    criticalAlerts: stockItems.filter(s => s.status === "critical").length,
-    pendingRequests: replenishmentRequests.filter(r => r.status === "pending").length
-  }), [patients, medications, stockItems, replenishmentRequests]);
+  const stats = useMemo(
+    () => ({
+      totalPatients: patients.length,
+      totalMedications: medications.length,
+      criticalAlerts: stockItems.filter((s) => s.status === "critical").length,
+      pendingRequests: replenishmentRequests.filter(
+        (r) => r.status === "pending"
+      ).length,
+    }),
+    [patients, medications, stockItems, replenishmentRequests]
+  );
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-[#16808c]">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Visão geral do gerenciamento de cuidados</p>
+        <p className="text-gray-600 mt-1">
+          Visão geral do gerenciamento de cuidados
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -244,10 +289,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <Users className="h-5 w-5 text-[#16808c]" />
           </CardHeader>
           <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-xl font-bold text-[#16808c]">{stats.totalPatients}</div>
-            <p className="text-xs text-gray-500 mt-1">
-              Ativos
-            </p>
+            <div className="text-xl font-bold text-[#16808c]">
+              {stats.totalPatients}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Ativos</p>
           </CardContent>
         </Card>
 
@@ -259,10 +304,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <Pill className="h-5 w-5 text-[#6cced9]" />
           </CardHeader>
           <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-xl font-bold text-[#16808c]">{stats.totalMedications}</div>
-            <p className="text-xs text-gray-500 mt-1">
-              Ativos
-            </p>
+            <div className="text-xl font-bold text-[#16808c]">
+              {stats.totalMedications}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Ativos</p>
           </CardContent>
         </Card>
 
@@ -274,10 +319,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <AlertTriangle className="h-5 w-5 text-[#a61f43]" />
           </CardHeader>
           <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-xl font-bold text-[#a61f43]">{stats.criticalAlerts}</div>
-            <p className="text-xs text-gray-500 mt-1">
-              Estoques
-            </p>
+            <div className="text-xl font-bold text-[#a61f43]">
+              {stats.criticalAlerts}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Estoques</p>
           </CardContent>
         </Card>
 
@@ -289,10 +334,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <Clock className="h-5 w-5 text-[#a0bf80]" />
           </CardHeader>
           <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-xl font-bold text-[#16808c]">{stats.pendingRequests}</div>
-            <p className="text-xs text-gray-500 mt-1">
-              Pendentes
-            </p>
+            <div className="text-xl font-bold text-[#16808c]">
+              {stats.pendingRequests}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Pendentes</p>
           </CardContent>
         </Card>
 
@@ -305,11 +350,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </CardHeader>
           <CardContent className="px-0 pb-0 pt-1">
             <div className="text-lg font-bold text-[#16808c]">
-              R$ {monthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              R${" "}
+              {monthlyExpenses.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Este mês
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Este mês</p>
           </CardContent>
         </Card>
       </div>
@@ -320,8 +367,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="text-[#16808c]">Meus Pacientes</span>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => onNavigate("patients")}
               >
@@ -341,7 +388,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               >
                 <Avatar>
                   <AvatarFallback className="bg-[#6cced9] text-white">
-                    {patient.name.split(" ").map(n => n[0]).join("")}
+                    {patient.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
@@ -365,64 +415,81 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span className="text-[#16808c]">Próximas Medicações</span>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => onNavigate("medications")}
               >
                 Ver Todas
               </Button>
             </CardTitle>
-            <CardDescription>
-              Horários de administração de hoje
-            </CardDescription>
+            <CardDescription>Horários de administração de hoje</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="text-xs uppercase text-gray-500 mb-2">{visibleSectionTitle}</div>
+            <div className="text-xs uppercase text-gray-500 mb-2">
+              {visibleSectionTitle}
+            </div>
             {visibleItems.length === 0 ? (
-              <div className="text-sm text-gray-400">Sem horários neste período</div>
+              <div className="text-sm text-gray-400">
+                Sem horários neste período
+              </div>
             ) : (
               <div className="space-y-3">
-<<<<<<< HEAD
                 {(() => {
                   // Agrupar medicações por paciente
                   const groupedByPatient = visibleItems.reduce((acc, med) => {
                     if (!acc[med.patientId]) {
                       // Buscar nome do paciente na lista de pacientes se med.patient estiver vazio
-                      const patient = patients.find(p => p.id === med.patientId);
-                      const patientName = med.patient || patient?.name || "Paciente desconhecido";
-                      
+                      const patient = patients.find(
+                        (p) => p.id === med.patientId
+                      );
+                      const patientName =
+                        med.patient || patient?.name || "Paciente desconhecido";
+
                       acc[med.patientId] = {
                         patientId: med.patientId,
                         patientName: patientName,
                         medications: [],
-                        caregiver: null as string | null
+                        caregiver: null as string | null,
                       };
                     }
                     acc[med.patientId].medications.push(med);
-                    
+
                     // Buscar cuidador responsável para este horário
-                    const caregiver = getCaregiverForPatientAndTime(med.patientId, med.time);
+                    const caregiver = getCaregiverForPatientAndTime(
+                      med.patientId,
+                      med.time
+                    );
                     if (caregiver && !acc[med.patientId].caregiver) {
                       acc[med.patientId].caregiver = caregiver;
                     }
-                    
+
                     return acc;
                   }, {} as Record<string, { patientId: string; patientName: string; medications: typeof visibleItems; caregiver: string | null }>);
 
                   const patientGroups = Object.values(groupedByPatient);
 
                   return patientGroups.map((group) => (
-                    <div key={group.patientId} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div
+                      key={group.patientId}
+                      className="border border-gray-200 rounded-lg overflow-hidden"
+                    >
                       <div className="w-full p-3 flex items-center justify-between bg-white">
                         <div className="flex items-center gap-3 flex-1">
                           <Users className="h-5 w-5 text-[#16808c] flex-shrink-0" />
-                          <span className="font-medium text-gray-900">{group.patientName}</span>
+                          <span className="font-medium text-gray-900">
+                            {group.patientName}
+                          </span>
                           <Badge variant="outline" className="text-xs">
-                            {group.medications.length} {group.medications.length === 1 ? "medicação" : "medicações"}
+                            {group.medications.length}{" "}
+                            {group.medications.length === 1
+                              ? "medicação"
+                              : "medicações"}
                           </Badge>
                           {group.caregiver && (
-                            <span className="text-xs text-gray-500 ml-2">Cuidador: {group.caregiver}</span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              Cuidador: {group.caregiver}
+                            </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -446,17 +513,24 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                           </button>
                         </div>
                       </div>
-                      
+
                       {expandedPatients.has(group.patientId) && (
                         <div className="border-t border-gray-200 bg-gray-50">
                           <div className="p-3 space-y-2">
                             {group.medications.map((med, idx) => (
-                              <div key={`${group.patientId}-${idx}`} className="flex items-center gap-3 p-2 rounded bg-white">
+                              <div
+                                key={`${group.patientId}-${idx}`}
+                                className="flex items-center gap-3 p-2 rounded bg-white"
+                              >
                                 <Clock className="h-4 w-4 text-[#16808c] flex-shrink-0" />
                                 <div className="flex-1">
-                                  <div className="text-sm font-medium">{med.medication}</div>
+                                  <div className="text-sm font-medium">
+                                    {med.medication}
+                                  </div>
                                 </div>
-                                <div className="text-sm font-medium text-[#16808c]">{med.time}</div>
+                                <div className="text-sm font-medium text-[#16808c]">
+                                  {med.time}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -465,23 +539,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     </div>
                   ));
                 })()}
-=======
-                {visibleItems.map((med, idx) => (
-                  <div key={`v-${idx}`} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
-                      <Clock className="h-5 w-5 text-[#16808c]" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{med.medication}</div>
-                      <div className="text-sm text-gray-500">{med.patient}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-[#16808c]">{med.time}</div>
-                      <Badge variant="outline" className="text-xs">Pendente</Badge>
-                    </div>
-                  </div>
-                ))}
->>>>>>> master
               </div>
             )}
           </CardContent>
@@ -496,9 +553,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <AlertTriangle className="h-5 w-5 text-[#a61f43]" />
               <span className="text-[#16808c]">Estoques Críticos</span>
             </CardTitle>
-            <CardDescription>
-              Medicamentos com estoque baixo
-            </CardDescription>
+            <CardDescription>Medicamentos com estoque baixo</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {criticalStocks.length === 0 ? (
@@ -508,33 +563,47 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             ) : (
               <>
                 {criticalStocks.map((stock) => (
-                  <div key={stock.id} className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                  <div
+                    key={stock.id}
+                    className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
                     <div className="space-y-3">
                       <div className="font-semibold text-base text-gray-900">
                         {stock.medication}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Estoque Atual</div>
+                          <div className="text-xs text-gray-500 mb-1">
+                            Estoque Atual
+                          </div>
                           <div className="text-sm font-bold text-[#16808c]">
-                            {stock.current} {getUnitLabel(stock.presentationForm || stock.unit || "comprimido")}
+                            {stock.current}{" "}
+                            {getUnitLabel(
+                              stock.presentationForm ||
+                                stock.unit ||
+                                "comprimido"
+                            )}
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Dias Restantes</div>
+                          <div className="text-xs text-gray-500 mb-1">
+                            Dias Restantes
+                          </div>
                           <div className="flex items-center gap-2">
                             <div className="text-sm font-bold text-gray-900">
                               {stock.daysLeft} dias
                             </div>
-                            <Badge 
-                              variant="outline" 
+                            <Badge
+                              variant="outline"
                               className={
-                                stock.status === "critical" 
-                                  ? "text-[#a61f43] border-[#a61f43] bg-[#a61f43]/10" 
+                                stock.status === "critical"
+                                  ? "text-[#a61f43] border-[#a61f43] bg-[#a61f43]/10"
                                   : "text-[#f2c36b] border-[#f2c36b] bg-[#f2c36b]/10"
                               }
                             >
-                              {stock.status === "critical" ? "Crítico" : "Atenção"}
+                              {stock.status === "critical"
+                                ? "Crítico"
+                                : "Atenção"}
                             </Badge>
                           </div>
                         </div>
@@ -542,8 +611,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     </div>
                   </div>
                 ))}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full border-[#16808c] text-[#16808c] hover:bg-[#16808c]/10"
                   onClick={() => onNavigate("stock")}
                 >
@@ -573,14 +642,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             ) : (
               <>
                 {expiringPrescriptions.map((prescription, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="p-4 rounded-lg border-2 border-[#a61f43]/20 bg-[#a61f43]/5"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <div className="font-medium">{prescription.medication}</div>
-                        <div className="text-sm text-gray-500">{prescription.patient}</div>
+                        <div className="font-medium">
+                          {prescription.medication}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {prescription.patient}
+                        </div>
                       </div>
                       <Badge className="bg-[#a61f43] text-white">
                         Tipo {prescription.type}
@@ -594,7 +667,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     </div>
                   </div>
                 ))}
-                <Button 
+                <Button
                   className="w-full bg-[#16808c] hover:bg-[#16808c]/90"
                   onClick={() => onNavigate("alerts")}
                 >
