@@ -46,31 +46,35 @@ public class GetPrescriptionsQueryHandler : IRequestHandler<GetPrescriptionsQuer
 
         // Buscar contagem de medicações associadas através de MedicationPatients
         var prescriptionIds = prescriptions.Select(p => p.Id).ToList();
-        var medicationCounts = await _context.MedicationPatients
-            .AsNoTracking()
-            .Where(mp => prescriptionIds.Contains(mp.PrescriptionId ?? Guid.Empty))
-            .GroupBy(mp => mp.PrescriptionId)
-            .ToDictionaryAsync(g => g.Key ?? Guid.Empty, g => g.Count(), cancellationToken);
+        var medicationCounts = prescriptionIds.Any() 
+            ? await _context.MedicationPatients
+                .AsNoTracking()
+                .Where(mp => mp.PrescriptionId.HasValue && prescriptionIds.Contains(mp.PrescriptionId.Value))
+                .GroupBy(mp => mp.PrescriptionId!.Value)
+                .ToDictionaryAsync(g => g.Key, g => g.Count(), cancellationToken)
+            : new Dictionary<Guid, int>();
 
-        return prescriptions.Select(p => new PrescriptionDto(
-            p.Id,
-            p.FileName,
-            p.FilePath,
-            p.FileType,
-            p.Type.ToString(),
-            p.IssueDate,
-            p.ExpiryDate,
-            p.IsReusable,
-            p.IsExpired(),
-            p.DoctorName,
-            p.DoctorCrm,
-            p.Notes,
-            p.PatientId,
-            p.Patient.Name,
-            p.OwnerId,
-            p.UploadedAt,
-            medicationCounts.GetValueOrDefault(p.Id, 0)
-        )).ToList();
+        return prescriptions
+            .Where(p => p.Patient != null) // Filtrar receitas sem paciente (devem ser tratadas)
+            .Select(p => new PrescriptionDto(
+                p.Id,
+                p.FileName,
+                p.FilePath,
+                p.FileType,
+                p.Type.ToString(),
+                p.IssueDate,
+                p.ExpiryDate,
+                p.IsReusable,
+                p.IsExpired(),
+                p.DoctorName,
+                p.DoctorCrm,
+                p.Notes,
+                p.PatientId,
+                p.Patient!.Name, // Usar ! porque já filtramos nulls
+                p.OwnerId,
+                p.UploadedAt,
+                medicationCounts.GetValueOrDefault(p.Id, 0)
+            )).ToList();
     }
 }
 

@@ -1,7 +1,9 @@
+// @ts-nocheck
 import React, { ReactNode, useState, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Logo } from "./Logo";
 import { Footer } from "./Footer";
+import logo from "../img/deja-logo.png";
 import {
   LayoutDashboard,
   Users,
@@ -76,12 +78,11 @@ export function DashboardLayout({
     },
     { id: "caregiver-schedules", label: "Cuidadores", icon: Users },
 
-    { id: "caregiver-schedules", label: "Cuidadores", icon: Users },
     { id: "alerts", label: "Configurações", icon: Bell },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
+    <div className="min-h-screen bg-[#F5F5F5] flex flex-col overflow-x-hidden">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-50">
         <Logo />
@@ -101,34 +102,42 @@ export function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full bg-white border-r border-gray-200 z-40
-          transition-all duration-300 ease-in-out
+          fixed top-0 left-0 h-full bg-white border-r border-gray-200 z-30
+          transition-all duration-300 ease-in-out flex flex-col
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           ${isCollapsed ? "w-20" : "w-64"}
           lg:translate-x-0
         `}
       >
-        <div className="border-b border-gray-200 hidden lg:block">
+        <div className="border-b border-gray-200 hidden lg:block flex-shrink-0">
           {isCollapsed ? (
-            <div className="p-3 flex justify-center items-center relative">
-              <Logo showText={false} compact={true} />
+            <div className="px-3 py-6 flex flex-col items-center justify-center relative">
+              <div className="w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 mb-2">
+                <img
+                  src={logo}
+                  alt="Logo Deja"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 absolute top-3 right-3"
+                className="h-8 w-8"
                 onClick={() => setIsCollapsed(false)}
+                title="Maximizar Menu"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <div className="p-6 flex items-center justify-between">
+            <div className="p-6 flex items-center justify-between h-16">
               <Logo showText={true} compact={false} />
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => setIsCollapsed(true)}
+                title="Minimizar Menu"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -137,15 +146,23 @@ export function DashboardLayout({
         </div>
 
         <nav
-          className={`space-y-1 mt-16 lg:mt-0 ${isCollapsed ? "p-2" : "p-4"}`}
+          className={`space-y-1 mt-16 lg:mt-0 ${
+            isCollapsed
+              ? "p-2 flex-shrink-0 overflow-hidden pb-20"
+              : "p-4 flex-1 overflow-y-auto pb-20"
+          }`}
         >
           {menuItems.map((item) => (
             <div key={item.id} className="relative group">
               <Button
                 variant={currentPage === item.id ? "secondary" : "ghost"}
                 className={`
-                  w-full gap-3
-                  ${isCollapsed ? "justify-center px-2" : "justify-start"}
+                  w-full
+                  ${
+                    isCollapsed
+                      ? "justify-center px-2 h-10 gap-0 [&>*:not(:first-child)]:hidden"
+                      : "justify-start gap-3 h-auto items-center"
+                  }
                   ${
                     currentPage === item.id
                       ? "bg-[#6cced9]/20 text-[#16808c] hover:bg-[#6cced9]/30"
@@ -161,7 +178,9 @@ export function DashboardLayout({
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 {!isCollapsed && (
                   <>
-                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className="flex-1 text-left truncate">
+                      {item.label}
+                    </span>
                     {item.badge !== undefined && item.badge > 0 && (
                       <span className="bg-[#a61f43] text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] flex items-center justify-center">
                         {item.badge}
@@ -170,13 +189,13 @@ export function DashboardLayout({
                   </>
                 )}
                 {isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute top-1 right-1 bg-[#a61f43] text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
+                  <span className="absolute top-1 right-1 bg-[#a61f43] text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px] z-10">
                     {item.badge > 9 ? "9+" : item.badge}
                   </span>
                 )}
               </Button>
               {isCollapsed && (
-                <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 whitespace-nowrap">
+                <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-md hidden group-hover:block opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 pointer-events-none z-50 whitespace-nowrap">
                   {item.label}
                   {item.badge !== undefined && item.badge > 0 && (
                     <span className="ml-2 bg-[#a61f43] text-white text-xs px-1.5 py-0.5 rounded">
@@ -189,21 +208,20 @@ export function DashboardLayout({
           ))}
         </nav>
 
-        <div
-          className={`absolute bottom-0 left-0 right-0 border-t border-gray-200 ${
-            isCollapsed ? "p-2" : "p-4"
-          }`}
-        >
+        {/* Seção de Usuário Logado */}
+        <div className="border-t border-gray-200 flex-shrink-0 absolute bottom-0 left-0 right-0 p-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 className={`w-full hover:bg-[#6cced9]/10 transition-colors ${
-                  isCollapsed ? "justify-center px-2" : "justify-start gap-3"
+                  isCollapsed
+                    ? "justify-center px-2 h-auto items-center"
+                    : "justify-start gap-3 h-auto items-center"
                 }`}
                 title={isCollapsed ? formatDisplayName(userName) : undefined}
               >
-                <Avatar className={`${isCollapsed ? "h-10 w-10" : "h-8 w-8"}`}>
+                <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarFallback className="bg-[#16808c] text-white">
                     {getInitials(userName)}
                   </AvatarFallback>
@@ -213,7 +231,9 @@ export function DashboardLayout({
                     <div className="text-sm font-medium truncate">
                       {formatDisplayName(userName)}
                     </div>
-                    <div className="text-xs text-gray-500">Representante</div>
+                    <div className="text-xs text-gray-500 truncate">
+                      Representante
+                    </div>
                   </div>
                 )}
               </Button>
@@ -259,15 +279,18 @@ export function DashboardLayout({
 
       {/* Main Content */}
       <main
-        className={`pt-16 lg:pt-0 flex-1 flex flex-col pb-16 lg:pb-16 transition-all duration-300 ${
-          isCollapsed ? "lg:pl-20" : "lg:pl-64"
-        }`}
+        className="pt-16 lg:pt-0 flex-1 flex flex-col transition-all duration-300 relative z-10"
+        style={{
+          paddingBottom: "4rem", // Espaço para o footer
+          width: isCollapsed ? "calc(100% - 5rem)" : "calc(100% - 16rem)",
+          marginLeft: isCollapsed ? "5rem" : "16rem",
+        }}
       >
-        <div className="p-6 lg:p-8 flex-1">{children}</div>
+        <div className="p-6 lg:p-8 flex-1 w-full">{children}</div>
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer isCollapsed={isCollapsed} />
 
       {/* Mobile Overlay */}
       {sidebarOpen && (

@@ -38,7 +38,7 @@ import {
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Separator } from "./ui/separator";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
 import { apiFetch } from "@/lib/api";
@@ -75,7 +75,7 @@ export function ProfilePage() {
   const [profileData, setProfileData] = useState({
     name: currentUser?.name || "",
     email: currentUser?.email || "",
-    phone: ""
+    phone: currentUser?.phoneNumber || ""
   });
 
   const [newCaregiver, setNewCaregiver] = useState({
@@ -112,9 +112,19 @@ export function ProfilePage() {
     load();
   }, [currentUser?.id]);
 
-  const handleEditProfile = () => {
-    toast.success("Perfil atualizado com sucesso!");
-    setIsEditProfileOpen(false);
+  const handleEditProfile = async () => {
+    try {
+      await apiFetch(`/auth/update`, {
+        method: 'POST',
+        body: JSON.stringify({ name: profileData.name, phoneNumber: profileData.phone })
+      });
+      const updated = await apiFetch<any>(`/auth/me`);
+      setProfileData({ name: updated.name, email: updated.email, phone: updated.phoneNumber || "" });
+      toast.success("Perfil atualizado com sucesso!");
+      setIsEditProfileOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao atualizar perfil");
+    }
   };
 
   const handleAddCaregiver = async () => {
@@ -307,7 +317,7 @@ export function ProfilePage() {
               <div>
                 <div className="text-xs text-gray-500">Membro desde</div>
                 <div className="font-medium">
-                  {currentUser?.createdAt && new Date(currentUser.createdAt).toLocaleDateString('pt-BR')}
+                  {currentUser?.createdAt ? new Date(currentUser.createdAt).toLocaleDateString('pt-BR') : ""}
                 </div>
               </div>
             </div>

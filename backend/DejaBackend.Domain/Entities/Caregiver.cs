@@ -16,10 +16,11 @@ public class Caregiver
     public Guid OwnerId { get; private set; }
     public DateTime AddedAt { get; private set; }
     public CaregiverStatus Status { get; private set; }
+    public string? Color { get; private set; }
 
     private Caregiver() { }
 
-    public Caregiver(string name, string? email, string phone, IEnumerable<Guid> patients, Guid ownerId)
+    public Caregiver(string name, string? email, string phone, IEnumerable<Guid> patients, Guid ownerId, string? color = null)
     {
         if (string.IsNullOrWhiteSpace(phone))
         {
@@ -34,9 +35,10 @@ public class Caregiver
         OwnerId = ownerId;
         AddedAt = DateTime.UtcNow;
         Status = CaregiverStatus.Active;
+        Color = string.IsNullOrWhiteSpace(color) ? null : color;
     }
 
-    public void Update(string name, string? email, string phone, IEnumerable<Guid> patients)
+    public void Update(string name, string? email, string phone, IEnumerable<Guid> patients, string? color = null)
     {
         if (string.IsNullOrWhiteSpace(phone))
         {
@@ -47,6 +49,7 @@ public class Caregiver
         Email = email;
         Phone = phone;
         Patients = patients?.ToList() ?? new List<Guid>();
+        Color = string.IsNullOrWhiteSpace(color) ? Color : color;
     }
 
     public void Deactivate()

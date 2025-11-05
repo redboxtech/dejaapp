@@ -14,7 +14,7 @@ import { CaregiverSchedulesPage } from "./components/CaregiverSchedulesPage";
 import { Toaster } from "./components/ui/sonner";
 import { DataProvider } from "./components/DataContext";
 import { AuthProvider, useAuth } from "./components/AuthContext";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState("landing");

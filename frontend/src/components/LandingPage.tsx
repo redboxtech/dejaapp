@@ -29,7 +29,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
+// @ts-ignore - imagem estática
 import brandImage from "../img/deja-brand.png";
 
 interface LandingPageProps {
@@ -116,14 +117,14 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
 
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="border-[#6cced9]/30 hover:shadow-lg transition-shadow">
-              <CardHeader>
+              <CardHeader className="pb-6">
                 <div className="w-12 h-12 rounded-lg bg-[#6cced9]/20 flex items-center justify-center mb-4">
                   <Pill className="h-6 w-6 text-[#16808c]" />
                 </div>
                 <CardTitle className="text-[#16808c]">
                   Gestão de Medicamentos
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="mb-0">
                   Controle completo de prescrições, horários, dosagens e
                   estoques de medicamentos
                 </CardDescription>
@@ -131,14 +132,14 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </Card>
 
             <Card className="border-[#6cced9]/30 hover:shadow-lg transition-shadow">
-              <CardHeader>
+              <CardHeader className="pb-6">
                 <div className="w-12 h-12 rounded-lg bg-[#a0bf80]/20 flex items-center justify-center mb-4">
                   <Bell className="h-6 w-6 text-[#a0bf80]" />
                 </div>
                 <CardTitle className="text-[#16808c]">
                   Alertas Inteligentes
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="mb-0">
                   Receba notificações sobre horários de medicação, estoques
                   baixos e receitas vencendo
                 </CardDescription>
@@ -146,14 +147,14 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </Card>
 
             <Card className="border-[#6cced9]/30 hover:shadow-lg transition-shadow">
-              <CardHeader>
+              <CardHeader className="pb-6">
                 <div className="w-12 h-12 rounded-lg bg-[#f2c36b]/20 flex items-center justify-center mb-4">
                   <Users className="h-6 w-6 text-[#f2c36b]" />
                 </div>
                 <CardTitle className="text-[#16808c]">
                   Gestão de Cuidadores
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="mb-0">
                   Organize e acompanhe a equipe de cuidadores responsável pelos
                   pacientes
                 </CardDescription>
@@ -161,14 +162,14 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </Card>
 
             <Card className="border-[#6cced9]/30 hover:shadow-lg transition-shadow">
-              <CardHeader>
+              <CardHeader className="pb-6">
                 <div className="w-12 h-12 rounded-lg bg-[#16808c]/20 flex items-center justify-center mb-4">
                   <Shield className="h-6 w-6 text-[#16808c]" />
                 </div>
                 <CardTitle className="text-[#16808c]">
                   Segurança e Transparência
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="mb-0">
                   Histórico completo de administrações e movimentações para
                   total rastreabilidade
                 </CardDescription>
@@ -176,26 +177,26 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </Card>
 
             <Card className="border-[#6cced9]/30 hover:shadow-lg transition-shadow">
-              <CardHeader>
+              <CardHeader className="pb-6">
                 <div className="w-12 h-12 rounded-lg bg-[#a61f43]/20 flex items-center justify-center mb-4">
                   <Heart className="h-6 w-6 text-[#a61f43]" />
                 </div>
                 <CardTitle className="text-[#16808c]">
                   Cuidado Personalizado
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="mb-0">
                   Adapte o sistema às necessidades específicas de cada paciente
                 </CardDescription>
               </CardHeader>
             </Card>
 
             <Card className="border-[#6cced9]/30 hover:shadow-lg transition-shadow">
-              <CardHeader>
+              <CardHeader className="pb-6">
                 <div className="w-12 h-12 rounded-lg bg-[#6cced9]/20 flex items-center justify-center mb-4">
                   <CheckCircle2 className="h-6 w-6 text-[#6cced9]" />
                 </div>
                 <CardTitle className="text-[#16808c]">Fácil de Usar</CardTitle>
-                <CardDescription>
+                <CardDescription className="mb-0">
                   Interface intuitiva, pensada para facilitar o dia a dia de
                   representantes e cuidadores
                 </CardDescription>
@@ -290,7 +291,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-stretch max-w-7xl mx-auto">
             {/* Left side - Brand message */}
-            <div className="flex-1 text-white flex items-center justify-center min-w-0 bg-gradient-to-br from-[#16808c] to-[#0d5d66] rounded-2xl p-8 md:p-12">
+            <div className="flex-1 text-white flex items-center justify-center min-w-0 bg-gradient-to-br from-[#16808c] to-[#0d5d66] rounded-2xl p-8 md:p-12 self-stretch">
               <img
                 src={brandImage}
                 alt="Simplificando o cuidado, para quem ama de verdade"
@@ -299,8 +300,8 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </div>
 
             {/* Right side - Form */}
-            <div className="flex-1 min-w-0">
-              <Card className="shadow-2xl">
+            <div className="flex-1 min-w-0 flex self-stretch">
+              <Card className="shadow-2xl w-full flex flex-col h-full">
                 <CardHeader>
                   <CardTitle className="text-3xl text-center text-[#16808c]">
                     Entre para a Lista de Espera
@@ -316,7 +317,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                       <Input
                         id="name"
                         value={formData.name}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setFormData({ ...formData, name: e.target.value })
                         }
                         required
@@ -329,7 +330,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                         id="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setFormData({ ...formData, email: e.target.value })
                         }
                         required
@@ -340,7 +341,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                       <Label htmlFor="userType">Tipo de Usuário</Label>
                       <Select
                         value={formData.userType}
-                        onValueChange={(value) =>
+                        onValueChange={(value: string) =>
                           setFormData({ ...formData, userType: value })
                         }
                         required
@@ -366,7 +367,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                       <Textarea
                         id="message"
                         value={formData.message}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                           setFormData({ ...formData, message: e.target.value })
                         }
                         placeholder="Conte-nos um pouco sobre suas necessidades..."

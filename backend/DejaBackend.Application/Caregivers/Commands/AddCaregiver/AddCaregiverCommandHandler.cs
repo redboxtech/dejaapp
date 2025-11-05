@@ -29,7 +29,8 @@ public class AddCaregiverCommandHandler : IRequestHandler<AddCaregiverCommand, G
             request.Email,
             request.Phone,
             request.Patients ?? new List<Guid>(),
-            ownerId
+            ownerId,
+            request.Color
         );
 
         _context.Caregivers.Add(caregiver);

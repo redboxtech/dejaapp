@@ -59,12 +59,15 @@ public class GetPatientsQueryHandler : IRequestHandler<GetPatientsQuery, List<Pa
         // Calculate last update based on creation date
         var lastUpdate = CalculateLastUpdate(patient.CreatedAt);
 
+        // Mapear CareType para português
+        var careTypeString = patient.CareType.ToString() == "Home" ? "Domiciliar" : "Institucional";
+        
         return new PatientDto(
             patient.Id,
             patient.Name,
             patient.Age,
             patient.BirthDate,
-            patient.CareType.ToString(),
+            careTypeString,
             medicationsCount,
             caregiversCount,
             lastUpdate,

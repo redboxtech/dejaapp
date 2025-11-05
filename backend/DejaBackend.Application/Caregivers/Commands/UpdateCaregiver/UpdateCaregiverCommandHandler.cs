@@ -36,7 +36,8 @@ public class UpdateCaregiverCommandHandler : IRequestHandler<UpdateCaregiverComm
             request.Name,
             request.Email,
             request.Phone,
-            request.Patients ?? new List<Guid>()
+            request.Patients ?? new List<Guid>(),
+            request.Color
         );
 
         await _context.SaveChangesAsync(cancellationToken);

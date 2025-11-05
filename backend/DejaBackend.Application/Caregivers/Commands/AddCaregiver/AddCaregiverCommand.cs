@@ -6,6 +6,7 @@ public record AddCaregiverCommand(
     string Name,
     string? Email,
     string Phone,
-    List<Guid> Patients
+    List<Guid> Patients,
+    string? Color
 ) : IRequest<Guid>;
 

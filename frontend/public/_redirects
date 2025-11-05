@@ -1,0 +1,4 @@
+# Redirect all routes to index.html for SPA routing
+# Landing page is the default route when not authenticated
+/*    /index.html   200
+

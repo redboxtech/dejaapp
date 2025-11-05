@@ -36,7 +36,8 @@ public class GetCaregiversQueryHandler : IRequestHandler<GetCaregiversQuery, Lis
             c.Phone,
             c.Patients,
             c.AddedAt.ToString("yyyy-MM-dd"),
-            c.Status.ToString().ToLower()
+            c.Status.ToString().ToLower(),
+            c.Color
         )).ToList();
     }
 }

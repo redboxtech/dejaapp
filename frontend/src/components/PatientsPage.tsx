@@ -44,7 +44,7 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Checkbox } from "./ui/checkbox";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { useData } from "./DataContext";
 import { useAuth } from "./AuthContext";
 import { apiFetch } from "../lib/api";
@@ -645,11 +645,7 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
                         )}
                       </div>
                     </div>
-                    {patient.criticalAlerts > 0 && (
-                      <Badge variant="destructive" className="bg-[#a61f43] mt-1">
-                        {patient.criticalAlerts} alerta{patient.criticalAlerts > 1 ? 's' : ''}
-                      </Badge>
-                    )}
+                    {/* Alerta removido do paciente: alertas aparecem apenas nas medicações */}
                     {patient.ownerId !== currentUser?.id && (
                       <Badge variant="outline" className="bg-[#6cced9]/10 mt-1">
                         Compartilhado
@@ -731,11 +727,7 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
                       <p className="text-gray-600">{patient.age} anos</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      {patient.criticalAlerts > 0 && (
-                        <Badge variant="destructive" className="bg-[#a61f43]">
-                          {patient.criticalAlerts} alerta{patient.criticalAlerts > 1 ? 's' : ''}
-                        </Badge>
-                      )}
+                      {/* Alerta removido do paciente: alertas aparecem apenas nas medicações */}
                       <div className="flex gap-1">
                         <Button
                           variant="ghost"

@@ -35,7 +35,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, C
             return null;
         }
 
-        return new CurrentUserDto(user.Id, user.Name, user.Email);
+        return new CurrentUserDto(user.Id, user.Name, user.Email, user.PhoneNumber, user.CreatedAt);
     }
 }
 

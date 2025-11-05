@@ -84,7 +84,8 @@ public class MedicationPatient
         DateOnly treatmentStartDate,
         DateOnly? treatmentEndDate,
         bool hasTapering,
-        decimal dailyConsumption)
+        decimal dailyConsumption,
+        Guid? prescriptionId = null)
     {
         Frequency = frequency;
         Times = times;
@@ -96,6 +97,10 @@ public class MedicationPatient
         TreatmentEndDate = treatmentEndDate;
         HasTapering = hasTapering;
         DailyConsumption = dailyConsumption;
+        if (prescriptionId.HasValue)
+        {
+            PrescriptionId = prescriptionId;
+        }
     }
 }
 

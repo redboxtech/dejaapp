@@ -490,19 +490,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     medication: Partial<Medication>
   ) => {
     try {
-      const treatmentTypeMap: Record<string, number> = {
-        continuo: 0,
-        temporario: 1,
-      };
-      const normalizedTimes = (medication.times || [])
-        .flatMap((t) => (typeof t === "string" ? t.split(/[;,]/) : [t]))
-        .map((t) => String(t).trim())
-        .filter(Boolean);
-      const startDate =
-        medication.treatmentStartDate &&
-        medication.treatmentStartDate.length > 0
-          ? medication.treatmentStartDate
-          : undefined;
+      // Atualizar apenas os dados do medicamento (sem posologia)
+      // A posologia deve ser atualizada separadamente via UpdateMedicationPatient
       const body: any = {
         id,
         name: medication.name,
@@ -525,31 +514,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             : "comprimido"), // Inferir presentationForm do unit antigo se necessário
         unit: medication.unit, // Mantido para compatibilidade
         route: medication.route,
-        frequency: medication.frequency,
-        times: normalizedTimes.length > 0 ? normalizedTimes : undefined,
-        isHalfDose:
-          medication.isHalfDose !== undefined
-            ? medication.isHalfDose
-            : undefined,
-        customFrequency:
-          medication.customFrequency !== undefined
-            ? medication.customFrequency || null
-            : undefined,
-        isExtra:
-          medication.isExtra !== undefined ? medication.isExtra : undefined,
-        treatmentStartDate: startDate,
-        treatmentEndDate: medication.treatmentEndDate ?? null,
-        hasTapering: medication.hasTapering,
-        dailyConsumption: medication.dailyConsumption,
         boxQuantity: medication.boxQuantity,
         instructions: medication.instructions,
-        prescriptionId: medication.prescriptionId || null,
       };
-
-      // Converter treatmentType de string para número se fornecido
-      if (medication.treatmentType) {
-        body.treatmentType = treatmentTypeMap[medication.treatmentType] ?? 0;
-      }
 
       await apiFetch(`/medications/${id}`, {
         method: "PUT",

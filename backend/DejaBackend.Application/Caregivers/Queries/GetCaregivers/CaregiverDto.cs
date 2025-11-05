@@ -7,6 +7,7 @@ public record CaregiverDto(
     string Phone,
     List<Guid> Patients,
     string AddedAt,
-    string Status
+    string Status,
+    string? Color
 );
 

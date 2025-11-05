@@ -11,6 +11,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phoneNumber?: string | null;
+  createdAt?: string;
 }
 
 interface AuthContextType {

@@ -20,7 +20,7 @@ public class CaregiversController : ControllerBase
         _mediator = mediator;
     }
 
-    public record CreateCaregiverRequest(string Name, string? Email, string Phone, List<Guid>? Patients);
+    public record CreateCaregiverRequest(string Name, string? Email, string Phone, List<Guid>? Patients, string? Color);
 
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -49,7 +49,8 @@ public class CaregiversController : ControllerBase
                 req.Name,
                 req.Email,
                 req.Phone,
-                req.Patients ?? new List<Guid>()
+                req.Patients ?? new List<Guid>(),
+                req.Color
             );
             var caregiverId = await _mediator.Send(command);
             return CreatedAtAction(nameof(Get), new { id = caregiverId }, caregiverId);
@@ -87,7 +88,8 @@ public class CaregiversController : ControllerBase
                 req.Name,
                 req.Email,
                 req.Phone,
-                req.Patients ?? new List<Guid>()
+                req.Patients ?? new List<Guid>(),
+                req.Color
             );
             var result = await _mediator.Send(command);
             if (!result)
@@ -136,7 +138,7 @@ public class CaregiversController : ControllerBase
         }
     }
     
-    public record UpdateCaregiverRequest(string Name, string? Email, string Phone, List<Guid>? Patients);
+    public record UpdateCaregiverRequest(string Name, string? Email, string Phone, List<Guid>? Patients, string? Color);
 }
 
 

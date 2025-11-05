@@ -62,6 +62,17 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        return Ok(new { id = result.Id, name = result.Name, email = result.Email });
+        return Ok(new { id = result.Id, name = result.Name, email = result.Email, phoneNumber = result.PhoneNumber, createdAt = result.CreatedAt });
+    }
+
+    [Authorize]
+    [HttpPost("update")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Update([FromBody] DejaBackend.Application.Auth.Commands.UpdateProfile.UpdateProfileCommand command)
+    {
+        var updated = await _mediator.Send(command);
+        if (!updated) return Unauthorized();
+        return NoContent();
     }
 }

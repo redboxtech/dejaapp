@@ -25,7 +25,7 @@ import {
 } from "./ui/dialog";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { useData } from "./DataContext";
 
 export function StockPage() {
@@ -56,6 +56,21 @@ export function StockPage() {
 
     return { total, normal, warning, critical };
   }, [stockItems]);
+
+  // Mapa: medicationId -> soma do consumo diário de todos os pacientes
+  const totalDailyByMedicationId = useMemo(() => {
+    const map: Record<string, number> = {};
+    medications.forEach((m: any) => {
+      const medId = String(m.id || m.medicationId || "");
+      if (!medId) return;
+      const daily = typeof m.dailyConsumption === "number"
+        ? m.dailyConsumption
+        : parseFloat(String(m.dailyConsumption || 0));
+      if (isNaN(daily)) return;
+      map[medId] = (map[medId] || 0) + daily;
+    });
+    return map;
+  }, [medications]);
 
   const handleAddStock = () => {
     if (!newStock.medicationId || !newStock.quantity || !newStock.source) {
@@ -108,10 +123,10 @@ export function StockPage() {
     }
   };
 
-  const getProgressValue = (current: number, dailyConsumption: number) => {
+  const getProgressValue = (current: number, totalDailyConsumption: number) => {
     // Validar valores numéricos
     const currentNum = typeof current === 'number' ? current : parseFloat(String(current || 0));
-    const dailyConsumptionNum = typeof dailyConsumption === 'number' ? dailyConsumption : parseFloat(String(dailyConsumption || 0));
+    const dailyConsumptionNum = typeof totalDailyConsumption === 'number' ? totalDailyConsumption : parseFloat(String(totalDailyConsumption || 0));
     
     // Verificar se são números válidos
     if (isNaN(currentNum) || isNaN(dailyConsumptionNum)) return 0;
@@ -353,10 +368,10 @@ export function StockPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Estoque atual: {item.current} {getUnitLabel(item.presentationForm || item.unit)}</span>
-                    <span className="font-medium">{Math.round(getProgressValue(item.current, item.dailyConsumption))}% do consumo mensal</span>
+                    <span className="font-medium">{Math.round(getProgressValue(item.current, totalDailyByMedicationId[String(item.medicationId)] || 0))}% do consumo mensal</span>
                   </div>
                   <Progress 
-                    value={Math.min(getProgressValue(item.current, item.dailyConsumption), 100)}
+                    value={Math.min(getProgressValue(item.current, totalDailyByMedicationId[String(item.medicationId)] || 0), 100)}
                     className="h-3"
                   />
                 </div>
@@ -369,7 +384,7 @@ export function StockPage() {
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Consumo Diário</div>
-                    <div className="font-medium">{item.dailyConsumption} {getUnitLabel(item.presentationForm || item.unit)}</div>
+                    <div className="font-medium">{(totalDailyByMedicationId[String(item.medicationId)] ?? 0)} {getUnitLabel(item.presentationForm || item.unit)}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Dias Restantes</div>

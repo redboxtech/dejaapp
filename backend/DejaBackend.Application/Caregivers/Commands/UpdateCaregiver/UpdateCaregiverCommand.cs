@@ -7,6 +7,7 @@ public record UpdateCaregiverCommand(
     string Name,
     string? Email,
     string Phone,
-    List<Guid>? Patients
+    List<Guid>? Patients,
+    string? Color
 ) : IRequest<bool>;
 

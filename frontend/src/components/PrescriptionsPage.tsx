@@ -45,7 +45,7 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Checkbox } from "./ui/checkbox";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { useData, TaperingSchedule, TaperingPhase, DosageUnit, PresentationForm } from "./DataContext";
 import { apiFetch, setToken } from "../lib/api";
 

@@ -3,6 +3,7 @@ using DejaBackend.Application.Medications.Commands.AddMedicationToPatient;
 using DejaBackend.Application.Medications.Commands.DeleteMedication;
 using DejaBackend.Application.Medications.Commands.RemoveMedicationFromPatient;
 using DejaBackend.Application.Medications.Commands.UpdateMedication;
+using DejaBackend.Application.Medications.Commands.UpdateMedicationPatient;
 using DejaBackend.Application.Medications.Queries.GetAllMedications;
 using DejaBackend.Application.Medications.Queries.GetMedications;
 using MediatR;
@@ -137,6 +138,37 @@ public class MedicationsController : ControllerBase
                 return NotFound(new { message = "Association not found." });
             }
             return NoContent();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{medicationId}/patient/{patientId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateMedicationPatient(Guid medicationId, Guid patientId, [FromBody] UpdateMedicationPatientCommand command)
+    {
+        if (medicationId != command.MedicationId || patientId != command.PatientId)
+        {
+            return BadRequest(new { message = "ID mismatch." });
+        }
+
+        try
+        {
+            var result = await _mediator.Send(command);
+            if (!result)
+            {
+                return NotFound(new { message = "Medication-Patient association not found." });
+            }
+            return Ok(new { message = "Medication posology updated successfully." });
         }
         catch (UnauthorizedAccessException)
         {
