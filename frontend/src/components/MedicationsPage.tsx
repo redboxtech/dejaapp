@@ -101,10 +101,14 @@ export function MedicationsPage() {
     administrationRoute: "",
     frequency: "",
     times: [] as string[],
+<<<<<<< HEAD
     isHalfDose: false, // Meia dose (1/2 comprimido por administração)
     customFrequency: "", // Frequência personalizada (ex: "a cada 2 dias")
     isExtra: false, // Medicação extra/avulsa
     prescriptionId: "", // ID da receita associada (opcional)
+=======
+    prescriptionType: "",
+>>>>>>> master
     treatmentType: "continuo" as TreatmentType,
     treatmentStartDate: "",
     treatmentEndDate: "",
@@ -263,6 +267,7 @@ export function MedicationsPage() {
 
     const dailyConsumption = parseFloat(newMedication.dailyConsumption) || 0;
 
+<<<<<<< HEAD
     const timesArray = (newMedication.times || [])
       .map((t) => t.trim())
       .filter(Boolean);
@@ -275,6 +280,10 @@ export function MedicationsPage() {
     };
 
     updateMedication(editingMedication.id, {
+=======
+    const timesArray = (newMedication.times || []).map(t => t.trim()).filter(Boolean);
+    addMedication({
+>>>>>>> master
       name: newMedication.name,
       dosage: parseFloat(newMedication.dosage) || 0,
       dosageUnit: newMedication.dosageUnit,
@@ -285,6 +294,7 @@ export function MedicationsPage() {
       route: newMedication.administrationRoute,
       frequency: newMedication.frequency,
       times: timesArray,
+<<<<<<< HEAD
       isHalfDose: newMedication.isHalfDose,
       customFrequency: newMedication.customFrequency || undefined,
       isExtra: newMedication.isExtra,
@@ -293,6 +303,12 @@ export function MedicationsPage() {
       treatmentStartDate:
         newMedication.treatmentStartDate ||
         new Date().toISOString().split("T")[0],
+=======
+      prescriptionType: newMedication.prescriptionType,
+      prescriptionExpiry: new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0],
+      treatmentType: newMedication.treatmentType,
+      treatmentStartDate: newMedication.treatmentStartDate,
+>>>>>>> master
       treatmentEndDate: newMedication.treatmentEndDate,
       hasTapering: newMedication.hasTapering,
       taperingSchedule: newMedication.taperingSchedule,
@@ -321,10 +337,14 @@ export function MedicationsPage() {
       administrationRoute: "",
       frequency: "",
       times: [],
+<<<<<<< HEAD
       isHalfDose: false,
       customFrequency: "",
       isExtra: false,
       prescriptionId: "",
+=======
+      prescriptionType: "",
+>>>>>>> master
       treatmentType: "continuo",
       treatmentStartDate: "",
       treatmentEndDate: "",
@@ -490,6 +510,7 @@ export function MedicationsPage() {
               </div>
             </DialogHeader>
 
+<<<<<<< HEAD
             <div className="flex-1 overflow-y-auto py-6 px-1">
               {/* Etapa 1: Informações Básicas */}
               {currentStep === 1 && (
@@ -502,6 +523,179 @@ export function MedicationsPage() {
                     <p className="text-sm text-gray-600">
                       Preencha os dados fundamentais do medicamento
                     </p>
+=======
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="unit">Unidade de Medida *</Label>
+                  <Select
+                    value={newMedication.unit}
+                    onValueChange={(value: MedicationUnit) => setNewMedication({ ...newMedication, unit: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="comprimido">Comprimido</SelectItem>
+                      <SelectItem value="ml">Mililitros (ml)</SelectItem>
+                      <SelectItem value="gotas">Gotas</SelectItem>
+                      <SelectItem value="mg">Miligramas (mg)</SelectItem>
+                      <SelectItem value="g">Gramas (g)</SelectItem>
+                      <SelectItem value="aplicacao">Aplicação</SelectItem>
+                      <SelectItem value="inalacao">Inalação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="patient">Paciente *</Label>
+                  <Select
+                    value={newMedication.patientId}
+                    onValueChange={(value) => {
+                      const patient = patients.find(p => p.id === value);
+                      setNewMedication({ 
+                        ...newMedication, 
+                        patientId: value,
+                        patient: patient?.name || ""
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o paciente..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patients.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Administration */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="route">Via de Administração</Label>
+                  <Select
+                    value={newMedication.administrationRoute}
+                    onValueChange={(value) => setNewMedication({ ...newMedication, administrationRoute: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Oral">Oral</SelectItem>
+                      <SelectItem value="Oral (gotas)">Oral (gotas)</SelectItem>
+                      <SelectItem value="Tópica">Tópica</SelectItem>
+                      <SelectItem value="Injetável">Injetável</SelectItem>
+                      <SelectItem value="Sublingual">Sublingual</SelectItem>
+                      <SelectItem value="Inalatória">Inalatória</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="prescription-type">Tipo de Receita</Label>
+                  <Select
+                    value={newMedication.prescriptionType}
+                    onValueChange={(value) => setNewMedication({ ...newMedication, prescriptionType: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Simples">Simples</SelectItem>
+                      <SelectItem value="B">Tipo B</SelectItem>
+                      <SelectItem value="C1">Tipo C1</SelectItem>
+                      <SelectItem value="C2">Tipo C2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Frequency */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="frequency">Frequência</Label>
+                  <Select
+                    value={newMedication.frequency}
+                    onValueChange={(value) => setNewMedication({ ...newMedication, frequency: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Diário">Diário</SelectItem>
+                      <SelectItem value="Semanal">Semanal</SelectItem>
+                      <SelectItem value="Mensal">Mensal</SelectItem>
+                      <SelectItem value="Intervalar">Intervalar</SelectItem>
+                      <SelectItem value="Variável">Variável (tapering)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Horários</Label>
+                  <div className="space-y-2">
+                    {(newMedication.times || []).map((t, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <Input
+                          type="time"
+                          value={t}
+                          onChange={(e) => {
+                            const copy = [...newMedication.times];
+                            copy[idx] = e.target.value;
+                            setNewMedication({ ...newMedication, times: copy });
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            const copy = [...newMedication.times];
+                            copy.splice(idx, 1);
+                            setNewMedication({ ...newMedication, times: copy });
+                          }}
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setNewMedication({ ...newMedication, times: [...(newMedication.times || []), ""] })}
+                    >
+                      Adicionar horário
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Treatment Type */}
+              <div className="p-4 bg-[#F5F5F5] rounded-lg space-y-4">
+                <div>
+                  <Label htmlFor="treatment-type">Tipo de Tratamento</Label>
+                  <Select
+                    value={newMedication.treatmentType}
+                    onValueChange={(value: TreatmentType) => setNewMedication({ ...newMedication, treatmentType: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="continuo">Contínuo (uso permanente)</SelectItem>
+                      <SelectItem value="temporario">Temporário (início e fim)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="start-date">Data de Início</Label>
+                    <Input
+                      id="start-date"
+                      type="date"
+                      value={newMedication.treatmentStartDate}
+                      onChange={(e) => setNewMedication({ ...newMedication, treatmentStartDate: e.target.value })}
+                    />
+>>>>>>> master
                   </div>
 
                   <div className="space-y-5">

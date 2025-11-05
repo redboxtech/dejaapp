@@ -1,7 +1,10 @@
 using DejaBackend.Application;
 using DejaBackend.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+<<<<<<< HEAD:backend/DejaBackend.Api/Program.cs
 using Microsoft.AspNetCore.Http;
+=======
+>>>>>>> master:DejaBackend/DejaBackend.Api/Program.cs
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using System.IO;

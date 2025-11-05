@@ -68,8 +68,13 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
       icon: ShoppingCart, 
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined 
     },
+<<<<<<< HEAD
     { id: "caregiver-schedules", label: "Cuidadores", icon: Users },
     { id: "alerts", label: "Configurações", icon: Bell },
+=======
+    { id: "alerts", label: "Alertas", icon: Bell },
+    { id: "settings", label: "Configurações", icon: Settings },
+>>>>>>> master
   ];
 
   return (
@@ -126,6 +131,7 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
 
         <nav className={`space-y-1 mt-16 lg:mt-0 ${isCollapsed ? 'p-2' : 'p-4'}`}>
           {menuItems.map((item) => (
+<<<<<<< HEAD
             <div key={item.id} className="relative group">
               <Button
                 variant={currentPage === item.id ? "secondary" : "ghost"}
@@ -169,6 +175,29 @@ export function DashboardLayout({ children, currentPage, onNavigate, onLogout, u
                     </span>
                   )}
                 </div>
+=======
+            <Button
+              key={item.id}
+              variant={currentPage === item.id ? "secondary" : "ghost"}
+              className={`
+                w-full justify-start gap-3
+                ${currentPage === item.id 
+                  ? 'bg-[#6cced9]/20 text-[#16808c] hover:bg-[#6cced9]/30' 
+                  : 'hover:bg-gray-100'
+                }
+              `}
+              onClick={() => {
+                onNavigate(item.id);
+                setSidebarOpen(false);
+              }}
+            >
+              <item.icon className="h-5 w-5" />
+              <span className="flex-1 text-left">{item.label}</span>
+              {item.badge !== undefined && item.badge > 0 && (
+                <span className="bg-[#a61f43] text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] flex items-center justify-center">
+                  {item.badge}
+                </span>
+>>>>>>> master
               )}
             </div>
           ))}

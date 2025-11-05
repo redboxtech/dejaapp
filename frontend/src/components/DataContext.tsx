@@ -170,6 +170,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const loadFromApi = async () => {
     try {
+<<<<<<< HEAD
       // Buscar configurações de alertas primeiro para usar thresholds dinâmicos
       const alertSettings = await apiFetch<any>(`/alerts/settings`).catch(() => null);
       
@@ -259,6 +260,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setReplenishmentRequests(requestsRes || []);
       setStockItems(stockRes || []);
       setMonthlyExpenses(expensesRes?.total || 0);
+=======
+      const [patientsRes, medicationsRes, requestsRes, stockRes] = await Promise.all([
+        apiFetch<Patient[]>(`/patients`),
+        apiFetch<Medication[]>(`/medications`),
+        apiFetch<ReplenishmentRequest[]>(`/replenishment`),
+        apiFetch<StockItem[]>(`/stock`),
+      ]);
+      setPatients(patientsRes || []);
+      setMedications(medicationsRes || []);
+      setReplenishmentRequests(requestsRes || []);
+      setStockItems(stockRes || []);
+>>>>>>> master
     } catch (e) {
       console.error('Erro ao carregar dados da API', e);
     }
@@ -339,6 +352,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addMedication = async (medication: Omit<Medication, "id" | "ownerId">) => {
     try {
+<<<<<<< HEAD
       // Adicionar apenas informações da medicação (sem posologia)
       // A posologia será adicionada posteriormente através de addMedicationToPatient
       const body = {
@@ -348,6 +362,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
         presentationForm: medication.presentationForm || (medication.unit && ["comprimido", "capsula", "gotas", "aplicacao", "inalacao", "ampola", "xarope", "suspensao"].includes(medication.unit) ? medication.unit : "comprimido"), // Inferir presentationForm do unit antigo se necessário
         route: medication.route,
         initialStock: medication.currentStock, // Estoque inicial será registrado como movimentação
+=======
+      const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
+      const normalizedTimes = (medication.times || [])
+        .flatMap(t => (typeof t === 'string' ? t.split(/[;,]/) : [t]))
+        .map(t => String(t).trim())
+        .filter(Boolean);
+      const startDate = medication.treatmentStartDate && medication.treatmentStartDate.length > 0
+        ? medication.treatmentStartDate
+        : new Date().toISOString().split('T')[0];
+      const body = {
+        name: medication.name,
+        dosage: medication.dosage,
+        unit: medication.unit,
+        patientId: medication.patientId,
+        route: medication.route,
+        frequency: medication.frequency,
+        times: normalizedTimes,
+        treatmentType: treatmentTypeMap[medication.treatmentType] ?? 0,
+        treatmentStartDate: startDate,
+        treatmentEndDate: medication.treatmentEndDate || null,
+        hasTapering: medication.hasTapering,
+        currentStock: medication.currentStock,
+        dailyConsumption: medication.dailyConsumption,
+>>>>>>> master
         boxQuantity: medication.boxQuantity,
         instructions: medication.instructions || "",
       };
@@ -358,6 +396,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await loadFromApi();
     } catch (e) {
       console.error('Erro ao adicionar medicação', e);
+<<<<<<< HEAD
       throw e;
     }
   };
@@ -408,6 +447,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+=======
+    }
+  };
+
+>>>>>>> master
   const updateMedication = async (id: string, medication: Partial<Medication>) => {
     try {
       const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
@@ -418,6 +462,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const startDate = medication.treatmentStartDate && medication.treatmentStartDate.length > 0
         ? medication.treatmentStartDate
         : undefined;
+<<<<<<< HEAD
       const body: any = {
         id,
         name: medication.name,
@@ -431,12 +476,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
         isHalfDose: medication.isHalfDose !== undefined ? medication.isHalfDose : undefined,
         customFrequency: medication.customFrequency !== undefined ? (medication.customFrequency || null) : undefined,
         isExtra: medication.isExtra !== undefined ? medication.isExtra : undefined,
+=======
+      const body = {
+        id,
+        name: medication.name,
+        dosage: medication.dosage,
+        unit: medication.unit,
+        route: medication.route,
+        frequency: medication.frequency,
+        times: normalizedTimes.length > 0 ? normalizedTimes : undefined,
+        treatmentType: medication.treatmentType ? treatmentTypeMap[medication.treatmentType] ?? 0 : undefined,
+>>>>>>> master
         treatmentStartDate: startDate,
         treatmentEndDate: medication.treatmentEndDate ?? null,
         hasTapering: medication.hasTapering,
         dailyConsumption: medication.dailyConsumption,
         boxQuantity: medication.boxQuantity,
         instructions: medication.instructions,
+<<<<<<< HEAD
         prescriptionId: medication.prescriptionId || null,
       };
       
@@ -445,6 +502,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         body.treatmentType = treatmentTypeMap[medication.treatmentType] ?? 0;
       }
       
+=======
+      };
+>>>>>>> master
       await apiFetch(`/medications/${id}`, {
         method: 'PUT',
         body: JSON.stringify(body),
@@ -464,11 +524,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+<<<<<<< HEAD
   const addStockEntry = async (medicationId: string, quantity: number, source: string, price?: number | null, totalInstallments?: number | null) => {
     try {
       await apiFetch(`/stock/entry`, {
         method: 'POST',
         body: JSON.stringify({ medicationId, quantity, source, price: price || null, totalInstallments: totalInstallments || null }),
+=======
+  const addStockEntry = async (medicationId: string, quantity: number, source: string) => {
+    try {
+      await apiFetch(`/stock/entry`, {
+        method: 'POST',
+        body: JSON.stringify({ medicationId, quantity, source }),
+>>>>>>> master
       });
       await loadFromApi();
     } catch (e) {

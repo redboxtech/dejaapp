@@ -4,7 +4,14 @@ using DejaBackend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+<<<<<<< HEAD:backend/DejaBackend.Infrastructure/Migrations/20251103203538_MakeCaregiverEmailOptional.Designer.cs
+<<<<<<<< HEAD:backend/DejaBackend.Infrastructure/Migrations/20251103203538_MakeCaregiverEmailOptional.Designer.cs
 using Microsoft.EntityFrameworkCore.Migrations;
+========
+>>>>>>>> master:DejaBackend/DejaBackend.Infrastructure/Migrations/ApplicationDbContextModelSnapshot.cs
+=======
+using Microsoft.EntityFrameworkCore.Migrations;
+>>>>>>> master:DejaBackend/DejaBackend.Infrastructure/Migrations/20251103203538_MakeCaregiverEmailOptional.Designer.cs
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable

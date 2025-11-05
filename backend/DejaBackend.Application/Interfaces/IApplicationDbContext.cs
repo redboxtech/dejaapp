@@ -13,10 +13,13 @@ public interface IApplicationDbContext
     DbSet<User> Users { get; }
     DbSet<Caregiver> Caregivers { get; }
     DbSet<Representative> Representatives { get; }
+<<<<<<< HEAD:backend/DejaBackend.Application/Interfaces/IApplicationDbContext.cs
     DbSet<Prescription> Prescriptions { get; }
     DbSet<AlertSettings> AlertSettings { get; }
     DbSet<CaregiverSchedule> CaregiverSchedules { get; }
     DbSet<CaregiverSchedulePatient> CaregiverSchedulePatients { get; }
+=======
+>>>>>>> master:DejaBackend/DejaBackend.Application/Interfaces/IApplicationDbContext.cs
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

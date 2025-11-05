@@ -114,7 +114,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     const all = medications.flatMap(med =>
       med.times.map(time => ({
         patient: med.patient,
+<<<<<<< HEAD
         patientId: med.patientId,
+=======
+>>>>>>> master
         medication: `${med.name} ${med.dosage}${med.unit === "comprimido" ? "mg" : med.unit}`,
         time,
         status: "pending" as const,
@@ -163,6 +166,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       items = pendingInCurrent;
     } else {
       const nextPeriod = nextOf(currentPeriod);
+<<<<<<< HEAD
       // Se estamos na noite e não há mais medicações pendentes, mostrar manhã do dia seguinte
       if (currentPeriod === "night") {
         currentTitle = "Manhã (Próximo Dia)";
@@ -175,6 +179,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
     return { morningMeds: morning, afternoonMeds: afternoon, nightMeds: night, visibleSectionTitle: currentTitle, visibleItems: items };
   }, [medications, patients]);
+=======
+      currentTitle = titleMap[nextPeriod];
+      items = periodToItems[nextPeriod];
+    }
+
+    return { morningMeds: morning, afternoonMeds: afternoon, nightMeds: night, visibleSectionTitle: currentTitle, visibleItems: items };
+  }, [medications]);
+>>>>>>> master
 
   const criticalStocks = useMemo(() => {
     return stockItems
@@ -371,6 +383,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <div className="text-sm text-gray-400">Sem horários neste período</div>
             ) : (
               <div className="space-y-3">
+<<<<<<< HEAD
                 {(() => {
                   // Agrupar medicações por paciente
                   const groupedByPatient = visibleItems.reduce((acc, med) => {
@@ -452,6 +465,23 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     </div>
                   ));
                 })()}
+=======
+                {visibleItems.map((med, idx) => (
+                  <div key={`v-${idx}`} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
+                      <Clock className="h-5 w-5 text-[#16808c]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">{med.medication}</div>
+                      <div className="text-sm text-gray-500">{med.patient}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-[#16808c]">{med.time}</div>
+                      <Badge variant="outline" className="text-xs">Pendente</Badge>
+                    </div>
+                  </div>
+                ))}
+>>>>>>> master
               </div>
             )}
           </CardContent>
