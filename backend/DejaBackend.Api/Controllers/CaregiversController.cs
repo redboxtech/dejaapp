@@ -1,9 +1,6 @@
 using DejaBackend.Application.Caregivers.Commands.AddCaregiver;
 using DejaBackend.Application.Caregivers.Commands.DeleteCaregiver;
-<<<<<<< HEAD:backend/DejaBackend.Api/Controllers/CaregiversController.cs
 using DejaBackend.Application.Caregivers.Commands.UpdateCaregiver;
-=======
->>>>>>> master:DejaBackend/DejaBackend.Api/Controllers/CaregiversController.cs
 using DejaBackend.Application.Caregivers.Queries.GetCaregivers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -71,7 +68,6 @@ public class CaregiversController : ControllerBase
         }
     }
 
-<<<<<<< HEAD:backend/DejaBackend.Api/Controllers/CaregiversController.cs
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -114,8 +110,6 @@ public class CaregiversController : ControllerBase
         }
     }
 
-=======
->>>>>>> master:DejaBackend/DejaBackend.Api/Controllers/CaregiversController.cs
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -141,11 +135,8 @@ public class CaregiversController : ControllerBase
             return BadRequest(new { message = "An error occurred while deleting the caregiver." });
         }
     }
-<<<<<<< HEAD:backend/DejaBackend.Api/Controllers/CaregiversController.cs
-
+    
     public record UpdateCaregiverRequest(string Name, string? Email, string Phone, List<Guid>? Patients);
-=======
->>>>>>> master:DejaBackend/DejaBackend.Api/Controllers/CaregiversController.cs
 }
 
 

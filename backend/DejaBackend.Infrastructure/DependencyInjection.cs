@@ -25,7 +25,6 @@ public static class DependencyInjection
         }
         
         services.AddDbContext<ApplicationDbContext>(options =>
-<<<<<<< HEAD:backend/DejaBackend.Infrastructure/DependencyInjection.cs
         {
             options.UseSqlServer(connectionString, sqlOptions =>
             {
@@ -36,9 +35,6 @@ public static class DependencyInjection
                     errorNumbersToAdd: null);
             });
         });
-=======
-            options.UseSqlServer(connectionString));
->>>>>>> master:DejaBackend/DejaBackend.Infrastructure/DependencyInjection.cs
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 

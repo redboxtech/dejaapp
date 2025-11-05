@@ -1,8 +1,5 @@
 using DejaBackend.Application.Stock.Commands.AddStockEntry;
-<<<<<<< HEAD:backend/DejaBackend.Api/Controllers/StockController.cs
 using DejaBackend.Application.Stock.Queries.GetMonthlyExpenses;
-=======
->>>>>>> master:DejaBackend/DejaBackend.Api/Controllers/StockController.cs
 using DejaBackend.Application.Stock.Queries.GetStock;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

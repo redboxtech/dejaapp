@@ -12,14 +12,10 @@ public class Patient
     public string Observations { get; private set; }
     public Guid OwnerId { get; private set; }
     public List<Guid> SharedWith { get; private set; } = new();
-<<<<<<< HEAD:backend/DejaBackend.Domain/Entities/Patient.cs
     // Relacionamento many-to-many com Medication através de MedicationPatient
     public ICollection<MedicationPatient> MedicationPatients { get; private set; } = new List<MedicationPatient>();
     // Relacionamento many-to-many com CaregiverSchedule através de CaregiverSchedulePatient
     public ICollection<CaregiverSchedulePatient> CaregiverSchedulePatients { get; private set; } = new List<CaregiverSchedulePatient>();
-=======
-    public ICollection<Medication> Medications { get; private set; } = new List<Medication>();
->>>>>>> master:DejaBackend/DejaBackend.Domain/Entities/Patient.cs
     public DateTime CreatedAt { get; private set; }
 
     // EF Core constructor

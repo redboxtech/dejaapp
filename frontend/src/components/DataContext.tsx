@@ -1,10 +1,25 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useMemo,
+} from "react";
 import { useAuth } from "./AuthContext";
 import { apiFetch } from "../lib/api";
 
 // Types
 export type DosageUnit = "mg" | "g" | "ml" | "mcg" | "ui"; // Unidade de medida da dosagem (princípio ativo)
-export type PresentationForm = "comprimido" | "capsula" | "gotas" | "aplicacao" | "inalacao" | "ampola" | "xarope" | "suspensao"; // Forma de apresentação
+export type PresentationForm =
+  | "comprimido"
+  | "capsula"
+  | "gotas"
+  | "aplicacao"
+  | "inalacao"
+  | "ampola"
+  | "xarope"
+  | "suspensao"; // Forma de apresentação
 export type MedicationUnit = DosageUnit | PresentationForm; // Mantido para compatibilidade temporária
 export type TreatmentType = "continuo" | "temporario";
 export type TaperingPhase = "aumento" | "manutencao" | "reducao" | "finalizado";
@@ -115,7 +130,10 @@ interface DataContextType {
   addPatient: (patient: Omit<Patient, "id" | "ownerId" | "sharedWith">) => void;
   updatePatient: (id: string, patient: Partial<Patient>) => void;
   deletePatient: (id: string) => void;
-  sharePatientWith: (patientId: string, representativeEmail: string) => Promise<boolean>;
+  sharePatientWith: (
+    patientId: string,
+    representativeEmail: string
+  ) => Promise<boolean>;
   addMedication: (medication: Omit<Medication, "id" | "ownerId">) => void;
   addMedicationToPatient: (
     medicationId: string,
@@ -136,7 +154,13 @@ interface DataContextType {
   ) => Promise<void>;
   updateMedication: (id: string, medication: Partial<Medication>) => void;
   deleteMedication: (id: string) => void;
-  addStockEntry: (medicationId: string, quantity: number, source: string, price?: number | null, totalInstallments?: number | null) => void;
+  addStockEntry: (
+    medicationId: string,
+    quantity: number,
+    source: string,
+    price?: number | null,
+    totalInstallments?: number | null
+  ) => void;
   approveReplenishment: (id: string, quantity: number) => void;
   rejectReplenishment: (id: string) => void;
   getMedicationsByPatient: (patientId: string) => Medication[];
@@ -148,11 +172,13 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { currentUser } = useAuth();
-  
+
   const [patients, setPatients] = useState<Patient[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
-  const [replenishmentRequests, setReplenishmentRequests] = useState<ReplenishmentRequest[]>([]);
+  const [replenishmentRequests, setReplenishmentRequests] = useState<
+    ReplenishmentRequest[]
+  >([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState<number>(0);
 
   // Carregar dados do usuário atual quando ele faz login
@@ -170,35 +196,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const loadFromApi = async () => {
     try {
-<<<<<<< HEAD
       // Buscar configurações de alertas primeiro para usar thresholds dinâmicos
-      const alertSettings = await apiFetch<any>(`/alerts/settings`).catch(() => null);
-      
+      const alertSettings = await apiFetch<any>(`/alerts/settings`).catch(
+        () => null
+      );
+
       // Usar thresholds das configurações ou valores padrão
       const LOW_STOCK_THRESHOLD = alertSettings?.lowStockThreshold ?? 7;
-      const CRITICAL_STOCK_THRESHOLD = alertSettings?.criticalStockThreshold ?? 3;
-      
-      const [patientsRes, medicationsRes, requestsRes, stockRes, expensesRes] = await Promise.all([
-        apiFetch<any[]>(`/patients`),
-        apiFetch<any[]>(`/medications`),
-        apiFetch<ReplenishmentRequest[]>(`/replenishment`),
-        apiFetch<StockItem[]>(`/stock`),
-        apiFetch<{ total: number }>(`/stock/monthly-expenses`).catch(() => ({ total: 0 })),
-      ]);
+      const CRITICAL_STOCK_THRESHOLD =
+        alertSettings?.criticalStockThreshold ?? 3;
+
+      const [patientsRes, medicationsRes, requestsRes, stockRes, expensesRes] =
+        await Promise.all([
+          apiFetch<any[]>(`/patients`),
+          apiFetch<any[]>(`/medications`),
+          apiFetch<ReplenishmentRequest[]>(`/replenishment`),
+          apiFetch<StockItem[]>(`/stock`),
+          apiFetch<{ total: number }>(`/stock/monthly-expenses`).catch(() => ({
+            total: 0,
+          })),
+        ]);
       setPatients(patientsRes || []);
-      
+
       // Mapear TreatmentType do backend (enum 0/1) para strings do frontend
       // O status já vem calculado do backend usando os thresholds dinâmicos
       // O backend agora retorna uma lista de Patients em vez de um único patientId/patient
       // Precisamos criar uma entrada de medicação para cada paciente associado
       const mappedMedications: Medication[] = [];
-      
+
       (medicationsRes || []).forEach((med: any) => {
         // Mapear TreatmentType
-        const treatmentType = med.treatmentType === 0 || med.treatmentType === "Continuous" ? "continuo" : 
-                               med.treatmentType === 1 || med.treatmentType === "Temporary" ? "temporario" : 
-                               "continuo"; // default
-        
+        const treatmentType =
+          med.treatmentType === 0 || med.treatmentType === "Continuous"
+            ? "continuo"
+            : med.treatmentType === 1 || med.treatmentType === "Temporary"
+            ? "temporario"
+            : "continuo"; // default
+
         // O backend já calcula o status usando os thresholds dinâmicos
         // Mas garantimos que o status seja válido
         let status = med.status?.toLowerCase() || "ok";
@@ -214,19 +248,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
             }
           }
         }
-        
+
         // Compatibilidade: Se med.Patients existe (nova estrutura), criar uma entrada por paciente
         // Se med.patientId existe (estrutura antiga), usar ela
         // O backend retorna Patients (com P maiúsculo) ou patients (com p minúsculo)
         const patientsList = med.Patients || med.patients || [];
-        
+
         if (Array.isArray(patientsList) && patientsList.length > 0) {
           // Nova estrutura: criar uma entrada para cada paciente
           patientsList.forEach((patientInfo: any) => {
             const patientId = patientInfo.PatientId || patientInfo.patientId;
-            const patientName = patientInfo.PatientName || patientInfo.patientName;
-            const dailyConsumption = patientInfo.DailyConsumption || patientInfo.dailyConsumption || med.totalDailyConsumption || med.TotalDailyConsumption || 0;
-            
+            const patientName =
+              patientInfo.PatientName || patientInfo.patientName;
+            const dailyConsumption =
+              patientInfo.DailyConsumption ||
+              patientInfo.dailyConsumption ||
+              med.totalDailyConsumption ||
+              med.TotalDailyConsumption ||
+              0;
+
             if (patientId) {
               mappedMedications.push({
                 ...med,
@@ -237,7 +277,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 status,
                 isHalfDose: med.isHalfDose ?? false,
                 customFrequency: med.customFrequency ?? undefined,
-                isExtra: med.isExtra ?? false
+                isExtra: med.isExtra ?? false,
               });
             }
           });
@@ -250,47 +290,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
             status,
             isHalfDose: med.isHalfDose ?? false,
             customFrequency: med.customFrequency ?? undefined,
-            isExtra: med.isExtra ?? false
+            isExtra: med.isExtra ?? false,
           });
         }
       });
-      
+
       setMedications(mappedMedications);
-      
+
       setReplenishmentRequests(requestsRes || []);
       setStockItems(stockRes || []);
       setMonthlyExpenses(expensesRes?.total || 0);
-=======
-      const [patientsRes, medicationsRes, requestsRes, stockRes] = await Promise.all([
-        apiFetch<Patient[]>(`/patients`),
-        apiFetch<Medication[]>(`/medications`),
-        apiFetch<ReplenishmentRequest[]>(`/replenishment`),
-        apiFetch<StockItem[]>(`/stock`),
-      ]);
-      setPatients(patientsRes || []);
-      setMedications(medicationsRes || []);
-      setReplenishmentRequests(requestsRes || []);
-      setStockItems(stockRes || []);
->>>>>>> master
     } catch (e) {
-      console.error('Erro ao carregar dados da API', e);
+      console.error("Erro ao carregar dados da API", e);
     }
   };
 
   // Removido: persistência em localStorage substituída por API
 
   const getMedicationsByPatient = useMemo(() => {
-    return (patientId: string) => medications.filter(m => m.patientId === patientId);
+    return (patientId: string) =>
+      medications.filter((m) => m.patientId === patientId);
   }, [medications]);
 
   const getStockByMedication = useMemo(() => {
-    return (medicationId: string) => stockItems.find(s => s.medicationId === medicationId);
+    return (medicationId: string) =>
+      stockItems.find((s) => s.medicationId === medicationId);
   }, [stockItems]);
 
-  const addPatient = async (patient: Omit<Patient, "id" | "ownerId" | "sharedWith">) => {
+  const addPatient = async (
+    patient: Omit<Patient, "id" | "ownerId" | "sharedWith">
+  ) => {
     try {
       // Mapear para AddPatientCommand
-      const careTypeMap: Record<string, number> = { Domiciliar: 0, Institucional: 1 };
+      const careTypeMap: Record<string, number> = {
+        Domiciliar: 0,
+        Institucional: 1,
+      };
       const body = {
         name: patient.name,
         birthDate: patient.birthDate, // "yyyy-MM-dd"
@@ -298,48 +333,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
         observations: patient.observations ?? "",
       };
       await apiFetch<string>(`/patients`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(body),
       });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao adicionar paciente', e);
+      console.error("Erro ao adicionar paciente", e);
     }
   };
 
   const updatePatient = async (id: string, patient: Partial<Patient>) => {
     try {
-      const careTypeMap: Record<string, number> = { Domiciliar: 0, Institucional: 1 };
+      const careTypeMap: Record<string, number> = {
+        Domiciliar: 0,
+        Institucional: 1,
+      };
       const body = {
         id,
         name: patient.name,
         birthDate: patient.birthDate, // "yyyy-MM-dd"
-        careType: patient.careType ? careTypeMap[patient.careType] ?? 0 : undefined,
+        careType: patient.careType
+          ? careTypeMap[patient.careType] ?? 0
+          : undefined,
         observations: patient.observations,
       };
       await apiFetch(`/patients/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify(body),
       });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao atualizar paciente', e);
+      console.error("Erro ao atualizar paciente", e);
     }
   };
 
   const deletePatient = async (id: string) => {
     try {
-      await apiFetch(`/patients/${id}`, { method: 'DELETE' });
+      await apiFetch(`/patients/${id}`, { method: "DELETE" });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao deletar paciente', e);
+      console.error("Erro ao deletar paciente", e);
     }
   };
 
-  const sharePatientWith = async (patientId: string, representativeEmail: string): Promise<boolean> => {
+  const sharePatientWith = async (
+    patientId: string,
+    representativeEmail: string
+  ): Promise<boolean> => {
     try {
       await apiFetch(`/patients/${patientId}/share`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ patientId, representativeEmail }),
       });
       await loadFromApi();
@@ -350,53 +393,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addMedication = async (medication: Omit<Medication, "id" | "ownerId">) => {
+  const addMedication = async (
+    medication: Omit<Medication, "id" | "ownerId">
+  ) => {
     try {
-<<<<<<< HEAD
       // Adicionar apenas informações da medicação (sem posologia)
       // A posologia será adicionada posteriormente através de addMedicationToPatient
       const body = {
         name: medication.name,
         dosage: medication.dosage,
         dosageUnit: medication.dosageUnit || medication.unit, // Priorizar dosageUnit, usar unit como fallback
-        presentationForm: medication.presentationForm || (medication.unit && ["comprimido", "capsula", "gotas", "aplicacao", "inalacao", "ampola", "xarope", "suspensao"].includes(medication.unit) ? medication.unit : "comprimido"), // Inferir presentationForm do unit antigo se necessário
+        presentationForm:
+          medication.presentationForm ||
+          (medication.unit &&
+          [
+            "comprimido",
+            "capsula",
+            "gotas",
+            "aplicacao",
+            "inalacao",
+            "ampola",
+            "xarope",
+            "suspensao",
+          ].includes(medication.unit)
+            ? medication.unit
+            : "comprimido"), // Inferir presentationForm do unit antigo se necessário
         route: medication.route,
         initialStock: medication.currentStock, // Estoque inicial será registrado como movimentação
-=======
-      const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
-      const normalizedTimes = (medication.times || [])
-        .flatMap(t => (typeof t === 'string' ? t.split(/[;,]/) : [t]))
-        .map(t => String(t).trim())
-        .filter(Boolean);
-      const startDate = medication.treatmentStartDate && medication.treatmentStartDate.length > 0
-        ? medication.treatmentStartDate
-        : new Date().toISOString().split('T')[0];
-      const body = {
-        name: medication.name,
-        dosage: medication.dosage,
-        unit: medication.unit,
-        patientId: medication.patientId,
-        route: medication.route,
-        frequency: medication.frequency,
-        times: normalizedTimes,
-        treatmentType: treatmentTypeMap[medication.treatmentType] ?? 0,
-        treatmentStartDate: startDate,
-        treatmentEndDate: medication.treatmentEndDate || null,
-        hasTapering: medication.hasTapering,
-        currentStock: medication.currentStock,
-        dailyConsumption: medication.dailyConsumption,
->>>>>>> master
         boxQuantity: medication.boxQuantity,
         instructions: medication.instructions || "",
       };
       await apiFetch(`/medications`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(body),
       });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao adicionar medicação', e);
-<<<<<<< HEAD
+      console.error("Erro ao adicionar medicação", e);
       throw e;
     }
   };
@@ -419,8 +452,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   ) => {
     try {
-      const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
-      const normalizedTimes = (posology.times || []).map((t) => t.trim()).filter(Boolean);
+      const treatmentTypeMap: Record<string, number> = {
+        continuo: 0,
+        temporario: 1,
+      };
+      const normalizedTimes = (posology.times || [])
+        .map((t) => t.trim())
+        .filter(Boolean);
       const body = {
         medicationId,
         patientId,
@@ -437,131 +475,143 @@ export function DataProvider({ children }: { children: ReactNode }) {
         prescriptionId: posology.prescriptionId || null,
       };
       await apiFetch(`/medications/add-to-patient`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(body),
       });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao adicionar medicação ao paciente', e);
+      console.error("Erro ao adicionar medicação ao paciente", e);
       throw e;
     }
   };
 
-=======
-    }
-  };
-
->>>>>>> master
-  const updateMedication = async (id: string, medication: Partial<Medication>) => {
+  const updateMedication = async (
+    id: string,
+    medication: Partial<Medication>
+  ) => {
     try {
-      const treatmentTypeMap: Record<string, number> = { continuo: 0, temporario: 1 };
+      const treatmentTypeMap: Record<string, number> = {
+        continuo: 0,
+        temporario: 1,
+      };
       const normalizedTimes = (medication.times || [])
-        .flatMap(t => (typeof t === 'string' ? t.split(/[;,]/) : [t]))
-        .map(t => String(t).trim())
+        .flatMap((t) => (typeof t === "string" ? t.split(/[;,]/) : [t]))
+        .map((t) => String(t).trim())
         .filter(Boolean);
-      const startDate = medication.treatmentStartDate && medication.treatmentStartDate.length > 0
-        ? medication.treatmentStartDate
-        : undefined;
-<<<<<<< HEAD
+      const startDate =
+        medication.treatmentStartDate &&
+        medication.treatmentStartDate.length > 0
+          ? medication.treatmentStartDate
+          : undefined;
       const body: any = {
         id,
         name: medication.name,
         dosage: medication.dosage,
         dosageUnit: medication.dosageUnit || medication.unit, // Priorizar dosageUnit, usar unit como fallback
-        presentationForm: medication.presentationForm || (medication.unit && ["comprimido", "capsula", "gotas", "aplicacao", "inalacao", "ampola", "xarope", "suspensao"].includes(medication.unit) ? medication.unit : "comprimido"), // Inferir presentationForm do unit antigo se necessário
+        presentationForm:
+          medication.presentationForm ||
+          (medication.unit &&
+          [
+            "comprimido",
+            "capsula",
+            "gotas",
+            "aplicacao",
+            "inalacao",
+            "ampola",
+            "xarope",
+            "suspensao",
+          ].includes(medication.unit)
+            ? medication.unit
+            : "comprimido"), // Inferir presentationForm do unit antigo se necessário
         unit: medication.unit, // Mantido para compatibilidade
         route: medication.route,
         frequency: medication.frequency,
         times: normalizedTimes.length > 0 ? normalizedTimes : undefined,
-        isHalfDose: medication.isHalfDose !== undefined ? medication.isHalfDose : undefined,
-        customFrequency: medication.customFrequency !== undefined ? (medication.customFrequency || null) : undefined,
-        isExtra: medication.isExtra !== undefined ? medication.isExtra : undefined,
-=======
-      const body = {
-        id,
-        name: medication.name,
-        dosage: medication.dosage,
-        unit: medication.unit,
-        route: medication.route,
-        frequency: medication.frequency,
-        times: normalizedTimes.length > 0 ? normalizedTimes : undefined,
-        treatmentType: medication.treatmentType ? treatmentTypeMap[medication.treatmentType] ?? 0 : undefined,
->>>>>>> master
+        isHalfDose:
+          medication.isHalfDose !== undefined
+            ? medication.isHalfDose
+            : undefined,
+        customFrequency:
+          medication.customFrequency !== undefined
+            ? medication.customFrequency || null
+            : undefined,
+        isExtra:
+          medication.isExtra !== undefined ? medication.isExtra : undefined,
         treatmentStartDate: startDate,
         treatmentEndDate: medication.treatmentEndDate ?? null,
         hasTapering: medication.hasTapering,
         dailyConsumption: medication.dailyConsumption,
         boxQuantity: medication.boxQuantity,
         instructions: medication.instructions,
-<<<<<<< HEAD
         prescriptionId: medication.prescriptionId || null,
       };
-      
+
       // Converter treatmentType de string para número se fornecido
       if (medication.treatmentType) {
         body.treatmentType = treatmentTypeMap[medication.treatmentType] ?? 0;
       }
-      
-=======
-      };
->>>>>>> master
+
       await apiFetch(`/medications/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify(body),
       });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao atualizar medicação', e);
+      console.error("Erro ao atualizar medicação", e);
     }
   };
 
   const deleteMedication = async (id: string) => {
     try {
-      await apiFetch(`/medications/${id}`, { method: 'DELETE' });
+      await apiFetch(`/medications/${id}`, { method: "DELETE" });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao deletar medicação', e);
+      console.error("Erro ao deletar medicação", e);
     }
   };
 
-<<<<<<< HEAD
-  const addStockEntry = async (medicationId: string, quantity: number, source: string, price?: number | null, totalInstallments?: number | null) => {
+  const addStockEntry = async (
+    medicationId: string,
+    quantity: number,
+    source: string,
+    price?: number | null,
+    totalInstallments?: number | null
+  ) => {
     try {
       await apiFetch(`/stock/entry`, {
-        method: 'POST',
-        body: JSON.stringify({ medicationId, quantity, source, price: price || null, totalInstallments: totalInstallments || null }),
-=======
-  const addStockEntry = async (medicationId: string, quantity: number, source: string) => {
-    try {
-      await apiFetch(`/stock/entry`, {
-        method: 'POST',
-        body: JSON.stringify({ medicationId, quantity, source }),
->>>>>>> master
+        method: "POST",
+        body: JSON.stringify({
+          medicationId,
+          quantity,
+          source,
+          price: price || null,
+          totalInstallments: totalInstallments || null,
+        }),
       });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao adicionar entrada de estoque', e);
+      console.error("Erro ao adicionar entrada de estoque", e);
     }
   };
 
   const approveReplenishment = async (id: string, quantity: number) => {
     try {
       await apiFetch(`/replenishment/${id}/approve`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ requestId: id, quantityAdded: quantity }),
       });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao aprovar reposição', e);
+      console.error("Erro ao aprovar reposição", e);
     }
   };
 
   const rejectReplenishment = async (id: string) => {
     try {
-      await apiFetch(`/replenishment/${id}/reject`, { method: 'POST' });
+      await apiFetch(`/replenishment/${id}/reject`, { method: "POST" });
       await loadFromApi();
     } catch (e) {
-      console.error('Erro ao rejeitar reposição', e);
+      console.error("Erro ao rejeitar reposição", e);
     }
   };
 

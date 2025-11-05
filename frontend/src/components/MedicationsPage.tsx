@@ -395,19 +395,21 @@ export function MedicationsPage() {
 
   const getUnitLabel = (unit: MedicationUnit) => {
     const labels: Record<MedicationUnit, string> = {
+      // PresentationForm
       comprimido: "comp",
       capsula: "caps",
       ml: "ml",
       gotas: "gts",
-      mg: "mg",
-      g: "g",
-      mcg: "mcg",
-      ui: "UI",
       aplicacao: "apl",
       inalacao: "inal",
       ampola: "amp",
       xarope: "xar",
       suspensao: "susp",
+      // DosageUnit
+      mg: "mg",
+      g: "g",
+      mcg: "mcg",
+      ui: "UI",
     } as const;
     return labels[unit] || (unit as string);
   };

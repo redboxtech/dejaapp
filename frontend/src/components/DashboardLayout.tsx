@@ -74,6 +74,7 @@ export function DashboardLayout({
       icon: ShoppingCart,
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined,
     },
+    { id: "caregiver-schedules", label: "Cuidadores", icon: Users },
 
     { id: "caregiver-schedules", label: "Cuidadores", icon: Users },
     { id: "alerts", label: "Configurações", icon: Bell },

@@ -206,6 +206,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       items = pendingInCurrent;
     } else {
       const nextPeriod = nextOf(currentPeriod);
+      // Se estamos na noite e não há mais medicações pendentes, mostrar manhã do dia seguinte
+      if (currentPeriod === "night") {
+        currentTitle = "Manhã (Próximo Dia)";
+        items = periodToItems["morning"];
+      } else {
+        currentTitle = titleMap[nextPeriod];
+        items = periodToItems[nextPeriod];
+      }
 
       // Se estamos na noite e não há mais medicações pendentes, mostrar manhã do dia seguinte
       if (currentPeriod === "night") {

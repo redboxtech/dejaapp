@@ -90,9 +90,9 @@ public class MedicationsController : ControllerBase
             return Unauthorized();
 
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return BadRequest(new { message = "An error occurred while updating the medication." });
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -110,7 +110,6 @@ public class MedicationsController : ControllerBase
         catch (UnauthorizedAccessException)
         {
             return Unauthorized();
-
         }
         catch (Exception ex)
         {
@@ -146,7 +145,6 @@ public class MedicationsController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
-
         }
     }
 
@@ -170,9 +168,9 @@ public class MedicationsController : ControllerBase
         {
             return Unauthorized();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return BadRequest(new { message = "An error occurred while deleting the medication." });
+            return BadRequest(new { message = ex.Message });
         }
     }
 }

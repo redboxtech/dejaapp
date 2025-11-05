@@ -35,7 +35,6 @@ public class GetPatientsQueryHandler : IRequestHandler<GetPatientsQuery, List<Pa
             .Where(p => p.OwnerId == userId || p.SharedWith.Contains(userId))
             .ToList();
 
-<<<<<<< HEAD:backend/DejaBackend.Application/Patients/Queries/GetPatients/GetPatientsQueryHandler.cs
         // Buscar medicações dos pacientes acessíveis através de MedicationPatients
         var patientIds = patients.Select(p => p.Id).ToList();
         var meds = await _context.Medications
@@ -45,16 +44,6 @@ public class GetPatientsQueryHandler : IRequestHandler<GetPatientsQuery, List<Pa
             .ToListAsync(cancellationToken);
 
         return patients.Select(p => MapToDto(p, meds.Where(m => m.MedicationPatients.Any(mp => mp.PatientId == p.Id)).ToList(), userId)).ToList();
-=======
-        // Buscar medicações dos pacientes acessíveis e agrupar em memória
-        var patientIds = patients.Select(p => p.Id).ToList();
-        var meds = await _context.Medications
-            .AsNoTracking()
-            .Where(m => patientIds.Contains(m.PatientId))
-            .ToListAsync(cancellationToken);
-
-        return patients.Select(p => MapToDto(p, meds.Where(m => m.PatientId == p.Id).ToList(), userId)).ToList();
->>>>>>> master:DejaBackend/DejaBackend.Application/Patients/Queries/GetPatients/GetPatientsQueryHandler.cs
     }
 
     private PatientDto MapToDto(Patient patient, List<Medication> medications, Guid currentUserId)
