@@ -68,11 +68,11 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "DejaBackend API v1");
+});
 
 app.UseHttpsRedirection();
 
@@ -105,6 +105,7 @@ if (Directory.Exists(frontendBuildPath))
     app.Use(async (context, next) =>
     {
         if (!context.Request.Path.StartsWithSegments("/api") &&
+            !context.Request.Path.StartsWithSegments("/swagger") &&
             !Path.HasExtension(context.Request.Path.Value))
         {
             context.Request.Path = "/index.html";
