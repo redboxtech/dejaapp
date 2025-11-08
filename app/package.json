@@ -1,0 +1,51 @@
+{
+  "name": "dejaapp-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^6.5.16",
+    "@react-navigation/native": "^6.1.17",
+    "@react-navigation/native-stack": "^6.9.25",
+    "axios": "^1.6.8",
+    "date-fns": "^3.6.0",
+    "expo": "~54.0.0",
+    "expo-constants": "~18.0.10",
+    "expo-linking": "~8.0.8",
+    "expo-notifications": "~0.32.12",
+    "expo-secure-store": "~15.0.7",
+    "expo-status-bar": "~3.0.8",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.4",
+    "@react-native/eslint-config": "^0.81.4",
+    "@types/react": "~19.1.10",
+    "babel-plugin-module-resolver": "^5.0.0",
+    "babel-preset-expo": "~54.0.7",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.2.5",
+    "typescript": "~5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
