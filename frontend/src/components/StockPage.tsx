@@ -290,58 +290,58 @@ export function StockPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
-                <Package className="h-5 w-5 text-[#16808c]" />
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-[#6cced9]/20 flex items-center justify-center flex-shrink-0">
+                <Package className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-[#16808c]" />
               </div>
-              <div>
-                <div className="text-xl font-bold text-[#16808c]">{stats.total}</div>
-                <div className="text-xs text-gray-600">Total de Itens</div>
+              <div className="min-w-0">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#16808c]">{stats.total}</div>
+                <div className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Total de Itens</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#a0bf80]/20 flex items-center justify-center">
-                <ArrowUpCircle className="h-5 w-5 text-[#a0bf80]" />
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-[#a0bf80]/20 flex items-center justify-center flex-shrink-0">
+                <ArrowUpCircle className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-[#a0bf80]" />
               </div>
-              <div>
-                <div className="text-xl font-bold text-[#a0bf80]">{stats.normal}</div>
-                <div className="text-xs text-gray-600">Estoque Normal</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#f2c36b]/20 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-[#f2c36b]" />
-              </div>
-              <div>
-                <div className="text-xl font-bold text-[#f2c36b]">{stats.warning}</div>
-                <div className="text-xs text-gray-600">Necessita Atenção</div>
+              <div className="min-w-0">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#a0bf80]">{stats.normal}</div>
+                <div className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Estoque Normal</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#a61f43]/20 flex items-center justify-center">
-                <TrendingDown className="h-5 w-5 text-[#a61f43]" />
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-[#f2c36b]/20 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-[#f2c36b]" />
               </div>
-              <div>
-                <div className="text-xl font-bold text-[#a61f43]">{stats.critical}</div>
-                <div className="text-xs text-gray-600">Estoque Crítico</div>
+              <div className="min-w-0">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#f2c36b]">{stats.warning}</div>
+                <div className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Necessita Atenção</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-[#a61f43]/20 flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-[#a61f43]" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#a61f43]">{stats.critical}</div>
+                <div className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Estoque Crítico</div>
               </div>
             </div>
           </CardContent>

@@ -1,13 +1,837 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Deja App</title>
-  </head>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deja App - Cuidado organizado, família tranquila</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #ffffff;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      background-color: #ffffff;
+      z-index: 50;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-img {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .logo-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .logo-text {
+      font-size: 1.875rem;
+      font-weight: bold;
+      color: #16808c;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-size: 0.875rem;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn-ghost {
+      background-color: transparent;
+      color: #1a1a1a;
+    }
+
+    .btn-ghost:hover {
+      background-color: #f5f5f5;
+    }
+
+    .btn-primary {
+      background-color: #16808c;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #0d5d66;
+    }
+
+    .btn-lg {
+      padding: 0.75rem 2rem;
+      font-size: 1.125rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 5rem 0;
+      background: linear-gradient(to bottom right, rgba(108, 206, 217, 0.1), rgba(22, 128, 140, 0.1));
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    @media (min-width: 768px) {
+      .hero-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #16808c;
+      margin-bottom: 1.5rem;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: #4b5563;
+      margin-bottom: 2rem;
+    }
+
+    .hero-image {
+      position: relative;
+    }
+
+    .hero-image img {
+      width: 100%;
+      border-radius: 1rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Features Section */
+    .features {
+      padding: 5rem 0;
+    }
+
+    .section-title {
+      font-size: 2.25rem;
+      font-weight: bold;
+      text-align: center;
+      color: #16808c;
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: #4b5563;
+      margin-bottom: 3rem;
+      max-width: 42rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .card {
+      border: 1px solid rgba(108, 206, 217, 0.3);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-icon svg {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #16808c;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-description {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    /* Benefits Section */
+    .benefits {
+      padding: 5rem 0;
+      background-color: #f5f5f5;
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .benefits-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .benefit-card {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 0.75rem;
+    }
+
+    .benefit-card h3 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #16808c;
+      margin-bottom: 1rem;
+    }
+
+    .benefit-list {
+      list-style: none;
+    }
+
+    .benefit-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .benefit-list svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      color: #a0bf80;
+      margin-top: 0.125rem;
+      flex-shrink: 0;
+    }
+
+    /* Waitlist Section */
+    .waitlist {
+      padding: 5rem 0;
+      background: linear-gradient(to bottom right, #16808c, #0d5d66);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .waitlist-decorative {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 20rem;
+      height: 20rem;
+      opacity: 0.1;
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 1rem;
+      padding: 2rem;
+    }
+
+    .waitlist-decorative::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle, white 2px, transparent 2px);
+      background-size: 2rem 2rem;
+      background-position: 0 0;
+    }
+
+    .waitlist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: stretch;
+      max-width: 80rem;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (min-width: 768px) {
+      .waitlist-container {
+        flex-direction: row;
+        gap: 3rem;
+      }
+    }
+
+    .waitlist-brand {
+      flex: 1;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      background: linear-gradient(to bottom right, #16808c, #0d5d66);
+      border-radius: 1rem;
+      padding: 2rem;
+      align-self: stretch;
+    }
+
+    @media (min-width: 768px) {
+      .waitlist-brand {
+        padding: 3rem;
+      }
+    }
+
+    .waitlist-brand img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .waitlist-form-container {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-self: stretch;
+    }
+
+    .waitlist-card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .waitlist-card-header {
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .waitlist-card-title {
+      font-size: 1.875rem;
+      font-weight: 600;
+      color: #16808c;
+      margin-bottom: 0.5rem;
+    }
+
+    .waitlist-card-description {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    .waitlist-card-content {
+      padding: 1.5rem;
+      flex: 1;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 500;
+      color: #1a1a1a;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+      background-color: #f5f5f5;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: #16808c;
+      background-color: white;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-select {
+      cursor: pointer;
+    }
+
+    /* Footer */
+    footer {
+      background-color: #16808c;
+      color: white;
+      padding: 0.75rem 0;
+    }
+
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .footer-content {
+        flex-direction: row;
+      }
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer-logo-img {
+      width: 1.25rem;
+      height: 1.25rem;
+      border-radius: 0.25rem;
+      overflow: hidden;
+      background-color: white;
+    }
+
+    .footer-logo-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .footer-logo-text {
+      font-size: 0.75rem;
+      color: white;
+    }
+
+    .footer-text {
+      font-size: 0.625rem;
+      text-align: center;
+    }
+
+    @media (min-width: 768px) {
+      .footer-text {
+        text-align: right;
+      }
+    }
+
+    .footer-link {
+      font-weight: 500;
+      color: white;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: #6cced9;
+    }
+
+    /* Smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container header-content">
+      <div class="logo-container">
+        <div class="logo-img">
+          <img src="./frontend/src/img/deja-logo.png" alt="Logo Deja" />
+        </div>
+        <span class="logo-text">Deja</span>
+      </div>
+      <div class="header-buttons">
+        <a href="#login" class="btn btn-ghost">Entrar</a>
+        <a href="#register" class="btn btn-primary">Criar Conta</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <h1>Cuidado organizado, família tranquila</h1>
+          <p>O Deja App é a plataforma completa para ajudar você a cuidar do que tem de mais valioso. Tenha controle total de medicamentos e rotinas, garantindo segurança e transparência em cada gesto de dedicação.</p>
+          <button class="btn btn-primary btn-lg" onclick="scrollToWaitlist()">
+            Entrar na lista de espera (grátis)
+            <svg style="display: inline-block; width: 1.25rem; height: 1.25rem; margin-left: 0.5rem; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+        </div>
+        <div class="hero-image">
+          <img src="https://images.unsplash.com/photo-1758691462477-976f771224d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGRlcmx5JTIwY2FyZSUyMGNhcmVnaXZlcnxlbnwxfHx8fDE3NjAxMjQyOTF8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="Cuidador e idoso" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title">Tudo que você precisa em um só lugar</h2>
+      <p class="section-subtitle">
+        Uma plataforma completa para representantes legais e cuidadores
+        gerenciarem o cuidado diário
+      </p>
+
+      <div class="features-grid">
+        <div class="card">
+          <div class="card-icon" style="background-color: rgba(108, 206, 217, 0.2);">
+            <svg fill="none" stroke="#16808c" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <h3 class="card-title">Gestão de Medicamentos</h3>
+          <p class="card-description">
+            Controle completo de prescrições, horários, dosagens e
+            estoques de medicamentos
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background-color: rgba(160, 191, 128, 0.2);">
+            <svg fill="none" stroke="#a0bf80" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </div>
+          <h3 class="card-title">Alertas Inteligentes</h3>
+          <p class="card-description">
+            Receba notificações sobre horários de medicação, estoques
+            baixos e receitas vencendo
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background-color: rgba(242, 195, 107, 0.2);">
+            <svg fill="none" stroke="#f2c36b" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <h3 class="card-title">Gestão de Cuidadores</h3>
+          <p class="card-description">
+            Organize e acompanhe a equipe de cuidadores responsável pelos
+            pacientes
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background-color: rgba(22, 128, 140, 0.2);">
+            <svg fill="none" stroke="#16808c" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h3 class="card-title">Segurança e Transparência</h3>
+          <p class="card-description">
+            Histórico completo de administrações e movimentações para
+            total rastreabilidade
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background-color: rgba(166, 31, 67, 0.2);">
+            <svg fill="none" stroke="#a61f43" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <h3 class="card-title">Cuidado Personalizado</h3>
+          <p class="card-description">
+            Adapte o sistema às necessidades específicas de cada paciente
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon" style="background-color: rgba(108, 206, 217, 0.2);">
+            <svg fill="none" stroke="#6cced9" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="card-title">Fácil de Usar</h3>
+          <p class="card-description">
+            Interface intuitiva, pensada para facilitar o dia a dia de quem ama de verdade (cuidadores e familiares)
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits Section -->
+  <section class="benefits">
+    <div class="container">
+      <h2 class="section-title">Benefícios para Todos</h2>
+
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <h3>Para Representantes</h3>
+          <ul class="benefit-list">
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Controle total sobre medicamentos e cuidadores</span>
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Relatórios e histórico completo de administrações</span>
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Alertas personalizados para nunca perder prazos</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="benefit-card">
+          <h3>Para Cuidadores</h3>
+          <ul class="benefit-list">
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Lista clara de medicamentos e horários</span>
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Registro fácil de administrações pelo app</span>
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Solicitação rápida de reposição de estoques</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="benefit-card">
+          <h3>Para Famílias</h3>
+          <ul class="benefit-list">
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Tranquilidade sabendo que tudo está organizado</span>
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Transparência total sobre os cuidados</span>
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Menos erros e mais segurança</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Waitlist Section -->
+  <section id="waitlist" class="waitlist">
+    <!-- Decorative dots pattern -->
+    <div class="waitlist-decorative"></div>
+    <div class="container">
+      <div class="waitlist-container">
+        <!-- Left side - Brand message -->
+        <div class="waitlist-brand">
+          <img src="./frontend/src/img/deja-brand.png" alt="Simplificando o cuidado, para quem ama de verdade" />
+        </div>
+
+        <!-- Right side - Form -->
+        <div class="waitlist-form-container">
+          <div class="waitlist-card">
+            <div class="waitlist-card-header">
+              <h2 class="waitlist-card-title">Entre para a Lista de Espera</h2>
+              <p class="waitlist-card-description">
+                Seja um dos primeiros a experimentar o Deja App
+              </p>
+            </div>
+            <div class="waitlist-card-content">
+              <form action="https://formsubmit.co/rdbxnc@gmail.com" method="POST">
+                <input type="hidden" name="_captcha" value="false">
+                <input type="hidden" name="_subject" value="Nova inscrição na Lista de Espera - Deja App">
+                <input type="hidden" name="_next" value="">
+
+                <div class="form-group">
+                  <label for="name" class="form-label">Nome Completo</label>
+                  <input
+                    type="text"
+                    name="Nome"
+                    id="name"
+                    class="form-input"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="email" class="form-label">E-mail</label>
+                  <input
+                    type="email"
+                    name="E-mail"
+                    id="email"
+                    class="form-input"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="userType" class="form-label">Tipo de Usuário</label>
+                  <select
+                    name="Tipo de Usuário"
+                    id="userType"
+                    class="form-select"
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="Representante Legal">Representante Legal</option>
+                    <option value="Cuidador">Cuidador</option>
+                    <option value="Familiar">Familiar</option>
+                    <option value="Instituição de Cuidados">Instituição de Cuidados</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="message" class="form-label">Mensagem (Opcional)</label>
+                  <textarea
+                    name="Mensagem"
+                    id="message"
+                    class="form-textarea"
+                    placeholder="Conte-nos um pouco sobre suas necessidades..."
+                    rows="4"
+                  ></textarea>
+                </div>
+
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-lg"
+                  style="width: 100%;"
+                >
+                  Entrar na Lista de Espera
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <div class="footer-logo-img">
+            <img src="./frontend/src/img/deja-logo.png" alt="Logo Deja" />
+          </div>
+          <span class="footer-logo-text">Deja</span>
+        </div>
+        <div class="footer-text">
+          <p>
+            © 2025 Deja App. Todos os direitos reservados à
+            <a href="https://redboxtecnologia.com.br/" target="_blank" rel="noopener noreferrer" class="footer-link">
+              Redbox Tecnologia
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function scrollToWaitlist() {
+      const waitlistSection = document.getElementById('waitlist');
+      if (waitlistSection) {
+        waitlistSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  </script>
+</body>
 </html>

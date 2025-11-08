@@ -11,6 +11,7 @@ import { AlertsPage } from "./components/AlertsPage";
 import { ReplenishmentPage } from "./components/ReplenishmentPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { CaregiverSchedulesPage } from "./components/CaregiverSchedulesPage";
+import { CaregiversPage } from "./components/CaregiversPage";
 import { Toaster } from "./components/ui/sonner";
 import { DataProvider } from "./components/DataContext";
 import { AuthProvider, useAuth } from "./components/AuthContext";
@@ -77,6 +78,8 @@ function AppContent() {
         return <AlertsPage />;
       case "replenishment":
         return <ReplenishmentPage />;
+      case "caregivers":
+        return <CaregiversPage />;
       case "caregiver-schedules":
         return <CaregiverSchedulesPage />;
       default:

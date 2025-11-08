@@ -1,20 +1,19 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Edit, 
+import {
+  User,
+  Mail,
+  Phone,
+  Edit,
   UserPlus,
   Trash2,
-  Users,
   Shield,
   Search,
-  X
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -42,6 +41,7 @@ import { toast } from "sonner";
 import { useAuth } from "./AuthContext";
 import { useData } from "./DataContext";
 import { apiFetch } from "@/lib/api";
+import { formatPhoneNumber, sanitizePhoneNumber } from "@/lib/utils";
 
 interface Caregiver {
   id: string;
@@ -75,7 +75,7 @@ export function ProfilePage() {
   const [profileData, setProfileData] = useState({
     name: currentUser?.name || "",
     email: currentUser?.email || "",
-    phone: currentUser?.phoneNumber || ""
+    phone: sanitizePhoneNumber(currentUser?.phoneNumber)
   });
 
   const [newCaregiver, setNewCaregiver] = useState({
@@ -102,6 +102,7 @@ export function ProfilePage() {
         ]);
         setCaregivers((cgs || []).map(c => ({
           ...c,
+          phone: sanitizePhoneNumber(c.phone),
           addedBy: currentUser?.id || "",
         })));
         setRepresentatives(reps || []);
@@ -119,7 +120,11 @@ export function ProfilePage() {
         body: JSON.stringify({ name: profileData.name, phoneNumber: profileData.phone })
       });
       const updated = await apiFetch<any>(`/auth/me`);
-      setProfileData({ name: updated.name, email: updated.email, phone: updated.phoneNumber || "" });
+      setProfileData({
+        name: updated.name,
+        email: updated.email,
+        phone: sanitizePhoneNumber(updated.phoneNumber),
+      });
       toast.success("Perfil atualizado com sucesso!");
       setIsEditProfileOpen(false);
     } catch (e: any) {
@@ -205,11 +210,6 @@ export function ProfilePage() {
     return patient?.name || "Paciente não encontrado";
   };
 
-  const stats = useMemo(() => ({
-    totalCaregivers: caregivers.filter(c => c.status === "active").length,
-    totalRepresentatives: representatives.filter(r => r.status === "active").length,
-  }), [caregivers, representatives]);
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -220,7 +220,7 @@ export function ProfilePage() {
 
       {/* Profile Card */}
       <Card>
-        <CardHeader>
+        <CardHeader className="px-6 pt-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
@@ -272,9 +272,14 @@ export function ProfilePage() {
                     <Input
                       id="phone"
                       type="tel"
-                      value={profileData.phone}
-                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                      placeholder="(00) 00000-0000"
+                  value={formatPhoneNumber(profileData.phone)}
+                  onChange={(e) =>
+                    setProfileData({
+                      ...profileData,
+                      phone: sanitizePhoneNumber(e.target.value),
+                    })
+                  }
+                  placeholder="(00) 90000-0000"
                     />
                   </div>
                 </div>
@@ -290,7 +295,7 @@ export function ProfilePage() {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-6">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
@@ -307,7 +312,9 @@ export function ProfilePage() {
               </div>
               <div>
                 <div className="text-xs text-gray-500">Telefone</div>
-                <div className="font-medium">{profileData.phone || "Não informado"}</div>
+                <div className="font-medium">
+                  {profileData.phone ? formatPhoneNumber(profileData.phone) : "Não informado"}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -326,262 +333,9 @@ export function ProfilePage() {
       </Card>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
-                <Users className="h-6 w-6 text-[#16808c]" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-[#16808c]">{stats.totalCaregivers}</div>
-                <div className="text-sm text-gray-600">Cuidadores Ativos</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#a0bf80]/20 flex items-center justify-center">
-                <Shield className="h-6 w-6 text-[#a0bf80]" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-[#16808c]">{stats.totalRepresentatives}</div>
-                <div className="text-sm text-gray-600">Outros Representantes</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Caregivers Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-[#16808c]">Cuidadores</CardTitle>
-              <CardDescription>Gerencie os cuidadores responsáveis pelos pacientes</CardDescription>
-            </div>
-            <Dialog open={isAddCaregiverOpen} onOpenChange={setIsAddCaregiverOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#16808c] hover:bg-[#16808c]/90">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Adicionar Cuidador
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="text-[#16808c]">Novo Cuidador</DialogTitle>
-                  <DialogDescription>
-                    Adicione um cuidador e associe-o aos pacientes
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="cg-name">Nome Completo *</Label>
-                    <Input
-                      id="cg-name"
-                      value={newCaregiver.name}
-                      onChange={(e) => setNewCaregiver({ ...newCaregiver, name: e.target.value })}
-                      placeholder="Nome do cuidador"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cg-email">E-mail (opcional)</Label>
-                    <Input
-                      id="cg-email"
-                      type="email"
-                      value={newCaregiver.email}
-                      onChange={(e) => setNewCaregiver({ ...newCaregiver, email: e.target.value })}
-                      placeholder="email@exemplo.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cg-phone">WhatsApp *</Label>
-                    <Input
-                      id="cg-phone"
-                      type="tel"
-                      value={newCaregiver.phone}
-                      onChange={(e) => setNewCaregiver({ ...newCaregiver, phone: e.target.value })}
-                      placeholder="(00) 00000-0000"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label>Pacientes Atribuídos</Label>
-                    {patients.length === 0 ? (
-                      <p className="text-sm text-gray-500 mt-2">Nenhum paciente cadastrado</p>
-                    ) : (
-                      <>
-                        {/* Campo de busca */}
-                        <div className="relative mt-2 mb-3">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input
-                            placeholder="Buscar pacientes..."
-                            value={patientSearchTerm}
-                            onChange={(e) => setPatientSearchTerm(e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
-                        
-                        {/* Lista de pacientes selecionados (chips) */}
-                        {newCaregiver.patients.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b">
-                            {newCaregiver.patients.map(patientId => {
-                              const patient = patients.find(p => p.id === patientId);
-                              if (!patient) return null;
-                              return (
-                                <Badge key={patientId} variant="secondary" className="flex items-center gap-1">
-                                  {patient.name}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setNewCaregiver({
-                                        ...newCaregiver,
-                                        patients: newCaregiver.patients.filter(id => id !== patientId)
-                                      });
-                                    }}
-                                    className="ml-1 hover:text-red-500"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        )}
-                        
-                        {/* Lista de pacientes com scroll */}
-                        <div className="border rounded-md max-h-60 overflow-y-auto">
-                          <div className="p-2 space-y-1">
-                            {patients
-                              .filter(patient => 
-                                patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase())
-                              )
-                              .map(patient => {
-                                const isSelected = newCaregiver.patients.includes(patient.id);
-                                return (
-                                  <div
-                                    key={patient.id}
-                                    className={`flex items-center gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer transition-colors ${
-                                      isSelected ? 'bg-[#16808c]/10 border border-[#16808c]' : ''
-                                    }`}
-                                    onClick={() => {
-                                      if (isSelected) {
-                                        setNewCaregiver({
-                                          ...newCaregiver,
-                                          patients: newCaregiver.patients.filter(id => id !== patient.id)
-                                        });
-                                      } else {
-                                        setNewCaregiver({
-                                          ...newCaregiver,
-                                          patients: [...newCaregiver.patients, patient.id]
-                                        });
-                                      }
-                                    }}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isSelected}
-                                      onChange={() => {}}
-                                      className="rounded border-gray-300 cursor-pointer"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                      <label className="text-sm font-medium cursor-pointer block">
-                                        {patient.name}
-                                      </label>
-                                      <span className="text-xs text-gray-500">
-                                        {patient.age} anos • {patient.careType}
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            {patients.filter(patient => 
-                              patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase())
-                            ).length === 0 && (
-                              <p className="text-sm text-gray-500 text-center py-4">
-                                Nenhum paciente encontrado
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        {newCaregiver.patients.length > 0 && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            {newCaregiver.patients.length} paciente{newCaregiver.patients.length > 1 ? 's' : ''} selecionado{newCaregiver.patients.length > 1 ? 's' : ''}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddCaregiverOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button className="bg-[#16808c] hover:bg-[#16808c]/90" onClick={handleAddCaregiver}>
-                    Adicionar
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {caregivers.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-              <p>Nenhum cuidador cadastrado</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {caregivers.map((caregiver) => (
-                <div key={caregiver.id} className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-[#6cced9] text-white">
-                      {caregiver.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-[#16808c]">{caregiver.name}</h4>
-                        {caregiver.email && <p className="text-sm text-gray-600">{caregiver.email}</p>}
-                        {caregiver.phone && <p className="text-sm text-gray-600">{caregiver.phone}</p>}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-[#a61f43] hover:text-[#a61f43] hover:bg-[#a61f43]/10"
-                        onClick={() => openDeleteDialog("caregiver", caregiver.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {caregiver.patients.map(patientId => (
-                        <Badge key={patientId} variant="outline" className="text-xs">
-                          {getPatientName(patientId)}
-                        </Badge>
-                      ))}
-                      {caregiver.patients.length === 0 && (
-                        <span className="text-xs text-gray-500">Nenhum paciente atribuído</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Representatives Section */}
       <Card>
-        <CardHeader>
+        <CardHeader className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-[#16808c]">Outros Representantes</CardTitle>
@@ -628,7 +382,7 @@ export function ProfilePage() {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 pb-6">
           {representatives.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Shield className="h-12 w-12 mx-auto mb-2 text-gray-300" />

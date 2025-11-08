@@ -289,91 +289,91 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="flex flex-row gap-3 w-full">
-        <Card className="p-4 flex-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
-            <CardTitle className="text-base font-medium text-[#16808c]">
+      <div className="flex flex-nowrap gap-3 sm:gap-4 w-full overflow-x-auto pb-2">
+        <Card className="p-3 sm:p-4 md:p-6 flex-1 min-w-[180px] sm:min-w-[200px]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-3 md:pb-4 px-0 pt-0">
+            <CardTitle className="text-xs sm:text-sm md:text-lg font-medium text-[#16808c]">
               Pacientes
             </CardTitle>
-            <Users className="h-5 w-5 text-[#16808c]" />
+            <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-7 md:w-7 text-[#16808c]" />
           </CardHeader>
-          <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-xl font-bold text-[#16808c]">
+          <CardContent className="px-0 pb-0 pt-1 sm:pt-2">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[#16808c]">
               {stats.totalPatients}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Ativos</p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">Ativos</p>
           </CardContent>
         </Card>
 
-        <Card className="p-4 flex-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
-            <CardTitle className="text-base font-medium text-[#16808c]">
+        <Card className="p-3 sm:p-4 md:p-6 flex-1 min-w-[180px] sm:min-w-[200px]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-3 md:pb-4 px-0 pt-0">
+            <CardTitle className="text-xs sm:text-sm md:text-lg font-medium text-[#16808c]">
               Medicamentos
             </CardTitle>
-            <Pill className="h-5 w-5 text-[#6cced9]" />
+            <Pill className="h-4 w-4 sm:h-5 sm:w-5 md:h-7 md:w-7 text-[#6cced9]" />
           </CardHeader>
-          <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-xl font-bold text-[#16808c]">
+          <CardContent className="px-0 pb-0 pt-1 sm:pt-2">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[#16808c]">
               {stats.totalMedications}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Ativos</p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">Ativos</p>
           </CardContent>
         </Card>
 
-        <Card className="p-4 flex-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
-            <CardTitle className="text-base font-medium text-[#a61f43]">
+        <Card className="p-3 sm:p-4 md:p-6 flex-1 min-w-[180px] sm:min-w-[200px]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-3 md:pb-4 px-0 pt-0">
+            <CardTitle className="text-xs sm:text-sm md:text-lg font-medium text-[#a61f43]">
               Críticos
             </CardTitle>
-            <AlertTriangle className="h-5 w-5 text-[#a61f43]" />
+            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 md:h-7 md:w-7 text-[#a61f43]" />
           </CardHeader>
-          <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-xl font-bold text-[#a61f43]">
+          <CardContent className="px-0 pb-0 pt-1 sm:pt-2">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[#a61f43]">
               {stats.criticalAlerts}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Estoques</p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">Estoques</p>
           </CardContent>
         </Card>
 
-        <Card className="p-4 flex-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
-            <CardTitle className="text-base font-medium text-[#16808c]">
+        <Card className="p-3 sm:p-4 md:p-6 flex-1 min-w-[180px] sm:min-w-[200px]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-3 md:pb-4 px-0 pt-0">
+            <CardTitle className="text-xs sm:text-sm md:text-lg font-medium text-[#16808c]">
               Solicitações
             </CardTitle>
-            <Clock className="h-5 w-5 text-[#a0bf80]" />
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 md:h-7 md:w-7 text-[#a0bf80]" />
           </CardHeader>
-          <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-xl font-bold text-[#16808c]">
+          <CardContent className="px-0 pb-0 pt-1 sm:pt-2">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[#16808c]">
               {stats.pendingRequests}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Pendentes</p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">Pendentes</p>
           </CardContent>
         </Card>
 
-        <Card className="p-4 flex-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
-            <CardTitle className="text-base font-medium text-[#16808c]">
+        <Card className="p-3 sm:p-4 md:p-6 flex-1 min-w-[200px] sm:min-w-[220px]">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-3 md:pb-4 px-0 pt-0">
+            <CardTitle className="text-xs sm:text-sm md:text-lg font-medium text-[#16808c]">
               Gasto Mensal
             </CardTitle>
-            <DollarSign className="h-5 w-5 text-[#a0bf80]" />
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 md:h-7 md:w-7 text-[#a0bf80]" />
           </CardHeader>
-          <CardContent className="px-0 pb-0 pt-1">
-            <div className="text-lg font-bold text-[#16808c]">
+          <CardContent className="px-0 pb-0 pt-1 sm:pt-2">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-[#16808c]">
               R${" "}
               {monthlyExpenses.toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Este mês</p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">Este mês</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Patients Overview */}
-        <Card>
-          <CardHeader>
+        <Card className="p-4 sm:p-6 md:p-8">
+          <CardHeader className="px-0 pt-0">
             <CardTitle className="flex items-center justify-between">
               <span className="text-[#16808c]">Meus Pacientes</span>
               <Button
@@ -388,7 +388,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               Pacientes sob sua responsabilidade
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 px-0 pb-0 pt-4">
             {patients.slice(0, 3).map((patient) => (
               <div
                 key={patient.id}
@@ -416,8 +416,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </Card>
 
         {/* Upcoming Medications */}
-        <Card>
-          <CardHeader>
+        <Card className="p-4 sm:p-6 md:p-8">
+          <CardHeader className="px-0 pt-0">
             <CardTitle className="flex items-center justify-between">
               <span className="text-[#16808c]">Próximas Medicações</span>
               <Button
@@ -430,7 +430,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </CardTitle>
             <CardDescription>Horários de administração de hoje</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 px-0 pb-0 pt-4">
             <div className="text-xs uppercase text-gray-500 mb-2">
               {visibleSectionTitle}
             </div>
@@ -560,15 +560,15 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Critical Stock Levels */}
-        <Card>
-          <CardHeader>
+        <Card className="p-4 sm:p-6 md:p-8">
+          <CardHeader className="px-0 pt-0">
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[#a61f43]" />
               <span className="text-[#16808c]">Estoques Críticos</span>
             </CardTitle>
             <CardDescription>Medicamentos com estoque baixo</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6 px-0 pb-0">
             {criticalStocks.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 Todos os estoques estão normais
@@ -637,8 +637,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </Card>
 
         {/* Expiring Prescriptions */}
-        <Card>
-          <CardHeader>
+        <Card className="p-4 sm:p-6 md:p-8">
+          <CardHeader className="px-0 pt-0">
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-[#a61f43]" />
               <span className="text-[#16808c]">Receitas Vencendo</span>
@@ -647,7 +647,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               Receitas que precisam ser renovadas
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6 px-0 pb-0">
             {expiringPrescriptions.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 Nenhuma receita vencendo nos próximos 30 dias

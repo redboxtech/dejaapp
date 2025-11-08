@@ -79,44 +79,44 @@ export function ReplenishmentPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#f2c36b]/20 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-[#f2c36b]" />
+      <div className="flex flex-nowrap gap-3 sm:gap-4 w-full overflow-x-auto pb-2">
+        <Card className="p-3 sm:p-4 md:p-6 flex-1 min-w-[180px] sm:min-w-[200px]">
+          <CardContent className="p-0">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[#f2c36b]/20 flex items-center justify-center">
+                <Clock className="h-6 w-6 text-[#f2c36b]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-[#16808c]">{stats.pending}</div>
-                <div className="text-sm text-gray-600">Pendentes</div>
+                <div className="text-3xl font-bold text-[#16808c]">{stats.pending}</div>
+                <div className="text-base text-gray-600 mt-1">Pendentes</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#a0bf80]/20 flex items-center justify-center">
-                <CheckCircle2 className="h-5 w-5 text-[#a0bf80]" />
+        <Card className="p-3 sm:p-4 md:p-6 flex-1 min-w-[180px] sm:min-w-[200px]">
+          <CardContent className="p-0">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[#a0bf80]/20 flex items-center justify-center">
+                <CheckCircle2 className="h-6 w-6 text-[#a0bf80]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-[#a0bf80]">{stats.completedThisWeek}</div>
-                <div className="text-sm text-gray-600">Aprovadas esta semana</div>
+                <div className="text-3xl font-bold text-[#16808c]">{stats.completedThisWeek}</div>
+                <div className="text-base text-gray-600 mt-1">Aprovadas esta semana</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#a61f43]/20 flex items-center justify-center">
-                <ShoppingCart className="h-5 w-5 text-[#a61f43]" />
+        <Card className="p-3 sm:p-4 md:p-6 flex-1 min-w-[180px] sm:min-w-[200px]">
+          <CardContent className="p-0">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-[#a61f43]/20 flex items-center justify-center">
+                <ShoppingCart className="h-6 w-6 text-[#a61f43]" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-[#a61f43]">{stats.urgent}</div>
-                <div className="text-sm text-gray-600">Urgente</div>
+                <div className="text-3xl font-bold text-[#a61f43]">{stats.urgent}</div>
+                <div className="text-base text-gray-600 mt-1">Urgente</div>
               </div>
             </div>
           </CardContent>

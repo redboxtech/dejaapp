@@ -4,15 +4,16 @@ import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
-import { 
-  Bell, 
-  Clock, 
-  Package, 
+import {
+  Bell,
+  Clock,
+  Package,
   Calendar,
   Mail,
   Smartphone,
   MessageSquare,
-  Save
+  Save,
+  Settings,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Separator } from "./ui/separator";
@@ -162,7 +163,7 @@ export function AlertsPage() {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-[#16808c]">Configuração de Alertas</h1>
+        <h1 className="text-3xl font-bold text-[#16808c]">Configurações</h1>
         <p className="text-gray-600 mt-1">
           Configure quando e como você deseja receber notificações
         </p>
@@ -170,7 +171,7 @@ export function AlertsPage() {
 
       {/* Medication Delay Alerts */}
       <Card>
-        <CardHeader>
+        <CardHeader className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#f2c36b]/20 flex items-center justify-center">
@@ -195,7 +196,7 @@ export function AlertsPage() {
           </div>
         </CardHeader>
         {alertSettings.medicationDelay.enabled && (
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-0 pb-6 px-6">
             <div>
               <Label>Tempo de tolerância (minutos)</Label>
               <Input
@@ -254,7 +255,7 @@ export function AlertsPage() {
 
       {/* Low Stock Alerts */}
       <Card>
-        <CardHeader>
+        <CardHeader className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#f2c36b]/20 flex items-center justify-center">
@@ -279,7 +280,7 @@ export function AlertsPage() {
           </div>
         </CardHeader>
         {alertSettings.lowStock.enabled && (
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-0 pb-6 px-6">
             <div>
               <Label>Dias de estoque restante</Label>
               <Input
@@ -326,7 +327,7 @@ export function AlertsPage() {
 
       {/* Critical Stock Alerts */}
       <Card>
-        <CardHeader>
+        <CardHeader className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#a61f43]/20 flex items-center justify-center">
@@ -351,7 +352,7 @@ export function AlertsPage() {
           </div>
         </CardHeader>
         {alertSettings.criticalStock.enabled && (
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-0 pb-6 px-6">
             <div>
               <Label>Dias de estoque restante</Label>
               <Input
@@ -410,7 +411,7 @@ export function AlertsPage() {
 
       {/* Prescription Expiry Alerts */}
       <Card>
-        <CardHeader>
+        <CardHeader className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
@@ -435,7 +436,7 @@ export function AlertsPage() {
           </div>
         </CardHeader>
         {alertSettings.prescriptionExpiry.enabled && (
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-0 pb-6 px-6">
             <div>
               <Label>Antecedência padrão (dias)</Label>
               <Input
@@ -518,7 +519,7 @@ export function AlertsPage() {
 
       {/* Quiet Hours */}
       <Card>
-        <CardHeader>
+        <CardHeader className="px-6 pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -543,7 +544,7 @@ export function AlertsPage() {
           </div>
         </CardHeader>
         {alertSettings.quietHours.enabled && (
-          <CardContent>
+          <CardContent className="pt-0 pb-6 px-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Horário de Início</Label>

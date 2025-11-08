@@ -677,59 +677,59 @@ export function PrescriptionsPage() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+      <div className="flex flex-nowrap gap-3 sm:gap-4 md:gap-6 w-full overflow-x-auto pb-2">
+        <Card className="flex-1 min-w-[170px] sm:min-w-[190px]">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-[#16808c]">{stats.total}</p>
+                <p className="text-xs sm:text-sm md:text-base font-medium text-gray-600 mb-1 sm:mb-2">Total</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#16808c]">{stats.total}</p>
               </div>
-              <FileText className="h-8 w-8 text-[#16808c]" />
+              <FileText className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-[#16808c] flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+        <Card className="flex-1 min-w-[170px] sm:min-w-[190px]">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
               <div>
-                <p className="text-sm font-medium text-gray-600">Vencidas</p>
-                <p className="text-2xl font-bold text-[#a61f43]">{stats.expired}</p>
+                <p className="text-xs sm:text-sm md:text-base font-medium text-gray-600 mb-1 sm:mb-2">Vencidas</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#a61f43]">{stats.expired}</p>
               </div>
-              <AlertCircle className="h-8 w-8 text-[#a61f43]" />
+              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-[#a61f43] flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+        <Card className="flex-1 min-w-[170px] sm:min-w-[190px]">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
               <div>
-                <p className="text-sm font-medium text-gray-600">Vencendo</p>
-                <p className="text-2xl font-bold text-[#f2c36b]">{stats.expiringSoon}</p>
+                <p className="text-xs sm:text-sm md:text-base font-medium text-gray-600 mb-1 sm:mb-2">Vencendo</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#f2c36b]">{stats.expiringSoon}</p>
               </div>
-              <Clock className="h-8 w-8 text-[#f2c36b]" />
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-[#f2c36b] flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+        <Card className="flex-1 min-w-[170px] sm:min-w-[190px]">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
               <div>
-                <p className="text-sm font-medium text-gray-600">Simples</p>
-                <p className="text-2xl font-bold text-green-600">{stats.simple}</p>
+                <p className="text-xs sm:text-sm md:text-base font-medium text-gray-600 mb-1 sm:mb-2">Simples</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-600">{stats.simple}</p>
               </div>
-              <FileText className="h-8 w-8 text-green-600" />
+              <FileText className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-green-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+        <Card className="flex-1 min-w-[170px] sm:min-w-[190px]">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
               <div>
-                <p className="text-sm font-medium text-gray-600">Controladas</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.controlled}</p>
+                <p className="text-xs sm:text-sm md:text-base font-medium text-gray-600 mb-1 sm:mb-2">Controladas</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-orange-600">{stats.controlled}</p>
               </div>
-              <FileText className="h-8 w-8 text-orange-600" />
+              <FileText className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-orange-600 flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

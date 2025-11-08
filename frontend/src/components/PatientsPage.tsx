@@ -118,8 +118,28 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
   // Memoized stats
   const stats = useMemo(() => {
     const totalPatients = patients.length;
-    const totalMedications = medications.length;
-    const totalAlerts = patients.reduce((sum, p) => sum + p.criticalAlerts, 0);
+    
+    // Contar apenas medicações ativas (não finalizadas)
+    const totalMedications = medications.filter(med => {
+      // Se for tratamento contínuo, está ativo
+      if (med.treatmentType === "continuo") {
+        return true;
+      }
+      // Se for tratamento temporário, verificar se ainda não passou da data de término
+      if (med.treatmentType === "temporario" && med.treatmentEndDate) {
+        const endDate = new Date(med.treatmentEndDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return endDate >= today;
+      }
+      // Se não tem data de término definida, considerar ativo
+      return true;
+    }).length;
+    
+    // Contar alertas pendentes (medicações com status critical ou warning)
+    const totalAlerts = medications.filter(med => 
+      med.status === "critical" || med.status === "warning"
+    ).length;
 
     return { totalPatients, totalMedications, totalAlerts };
   }, [patients, medications]);
@@ -411,44 +431,44 @@ export function PatientsPage({ onNavigate }: PatientsPageProps) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 flex-shrink-0 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
-                <User className="h-6 w-6 text-[#16808c]" />
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex-shrink-0 rounded-full bg-[#6cced9]/20 flex items-center justify-center">
+                <User className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-[#16808c]" />
               </div>
               <div className="min-w-0">
-                <div className="text-2xl font-bold text-[#16808c]">{stats.totalPatients}</div>
-                <div className="text-sm text-gray-600 truncate">Total de Pacientes</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#16808c]">{stats.totalPatients}</div>
+                <div className="text-sm sm:text-base text-gray-600 truncate mt-1 sm:mt-2">Total de Pacientes</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 flex-shrink-0 rounded-full bg-[#a0bf80]/20 flex items-center justify-center">
-                <Pill className="h-6 w-6 text-[#a0bf80]" />
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex-shrink-0 rounded-full bg-[#a0bf80]/20 flex items-center justify-center">
+                <Pill className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-[#a0bf80]" />
               </div>
               <div className="min-w-0">
-                <div className="text-2xl font-bold text-[#16808c]">{stats.totalMedications}</div>
-                <div className="text-sm text-gray-600 truncate">Medicamentos Ativos</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#16808c]">{stats.totalMedications}</div>
+                <div className="text-sm sm:text-base text-gray-600 truncate mt-1 sm:mt-2">Medicamentos Ativos</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 flex-shrink-0 rounded-full bg-[#f2c36b]/20 flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-[#f2c36b]" />
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex-shrink-0 rounded-full bg-[#f2c36b]/20 flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-[#f2c36b]" />
               </div>
               <div className="min-w-0">
-                <div className="text-2xl font-bold text-[#f2c36b]">{stats.totalAlerts}</div>
-                <div className="text-sm text-gray-600 truncate">Alertas Pendentes</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#f2c36b]">{stats.totalAlerts}</div>
+                <div className="text-sm sm:text-base text-gray-600 truncate mt-1 sm:mt-2">Alertas Pendentes</div>
               </div>
             </div>
           </CardContent>

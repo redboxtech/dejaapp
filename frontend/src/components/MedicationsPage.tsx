@@ -1527,69 +1527,69 @@ export function MedicationsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-[#16808c]">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#16808c]">
                 {stats.total}
               </div>
-              <div className="text-xs text-gray-600 mt-1">Total</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2 md:mt-3">Total</div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-[#a0bf80]">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#a0bf80]">
                 {stats.normal}
               </div>
-              <div className="text-xs text-gray-600 mt-1">Normal</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2 md:mt-3">Normal</div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-[#f2c36b]">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#f2c36b]">
                 {stats.warning}
               </div>
-              <div className="text-xs text-gray-600 mt-1">Atenção</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2 md:mt-3">Atenção</div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-[#a61f43]">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#a61f43]">
                 {stats.critical}
               </div>
-              <div className="text-xs text-gray-600 mt-1">Crítico</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2 md:mt-3">Crítico</div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-[#6cced9]">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#6cced9]">
                 {stats.temporary}
               </div>
-              <div className="text-xs text-gray-600 mt-1">Temporários</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2 md:mt-3">Temporários</div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             <div className="text-center">
-              <div className="text-2xl font-bold text-[#16808c]">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#16808c]">
                 {stats.withTapering}
               </div>
-              <div className="text-xs text-gray-600 mt-1">Com Desmame</div>
+              <div className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 sm:mt-2 md:mt-3">Com Desmame</div>
             </div>
           </CardContent>
         </Card>
