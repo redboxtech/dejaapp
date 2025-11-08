@@ -1,4 +1,7 @@
-const API_BASE = '/api';
+const API_BASE =
+  typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+    : "/api";
 
 function getToken(): string | null {
   return localStorage.getItem('deja_token');
@@ -17,7 +20,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(url, {
     ...options,
     headers,
   });
