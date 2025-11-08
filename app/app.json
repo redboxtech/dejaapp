@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "DejaApp",
+    "slug": "dejaapp",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "dejaapp",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dejaapp.mobile"
+    },
+    "android": {
+      "package": "com.dejaapp.mobile"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Permitir que o DejaApp use o Face ID para autenticar o representante legal."
+        }
+      ],
+      "expo-notifications"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "00000000-0000-0000-0000-000000000000"
+      },
+      "apiBaseUrl": "https://sua-api-deja.com"
+    }
+  }
+}
+

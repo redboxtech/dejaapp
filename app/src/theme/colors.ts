@@ -1,0 +1,26 @@
+export const colors = {
+  primary: "#16808C",
+  primaryStrong: "#0F5D66",
+  primaryContrast: "#FFFFFF",
+  primaryTint: "rgba(22, 128, 140, 0.08)",
+  primaryNight: "#030213",
+  secondary: "#6CCED9",
+  secondaryContrast: "#1A1A1A",
+  secondaryTint: "rgba(108, 206, 217, 0.16)",
+  background: "#FFFFFF",
+  backgroundMuted: "#F5F5F5",
+  surface: "#FFFFFF",
+  surfaceMuted: "#F9FBFB",
+  surfaceBorder: "#D9D9D9",
+  divider: "#E4E4E7",
+  textPrimary: "#1A1A1A",
+  textSecondary: "#4F5B5C",
+  textTertiary: "#7A8C8D",
+  success: "#A0BF80",
+  warning: "#F2C36B",
+  danger: "#A61F43",
+  overlay: "rgba(26, 26, 26, 0.04)",
+  warmAccent: "#F2C36B",
+  calmGreen: "#A0BF80"
+} as const;
+
