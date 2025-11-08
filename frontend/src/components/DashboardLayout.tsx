@@ -97,12 +97,6 @@ export function DashboardLayout({
       { id: "prescriptions", label: "Receitas", icon: FileText },
       { id: "stock", label: "Estoque", icon: Package },
       {
-        id: "replenishment",
-        label: "Solicitações",
-        icon: ShoppingCart,
-        badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined,
-      },
-      {
         id: "caregivers-group",
         label: "Cuidadores",
         icon: Users,
