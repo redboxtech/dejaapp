@@ -1,3 +1,4 @@
+using DejaBackend.Api.Models;
 using DejaBackend.Application.Interfaces;
 using DejaBackend.Application.Prescriptions.Commands.UploadPrescription;
 using DejaBackend.Application.Prescriptions.Commands.ProcessPrescription;
@@ -59,17 +60,16 @@ public class PrescriptionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [RequestSizeLimit(10 * 1024 * 1024)] // 10MB max
-    public async Task<IActionResult> UploadPrescription(
-        [FromForm] IFormFile file,
-        [FromForm] Guid patientId,
-        [FromForm] int type, // PrescriptionType enum
-        [FromForm] string issueDate, // "yyyy-MM-dd"
-        [FromForm] string? doctorName = null,
-        [FromForm] string? doctorCrm = null,
-        [FromForm] string? notes = null)
+    public async Task<IActionResult> UploadPrescription([FromForm] UploadPrescriptionRequest request)
     {
         try
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var file = request.File;
             if (file == null || file.Length == 0)
             {
                 return BadRequest(new { message = "File is required." });
@@ -113,7 +113,7 @@ public class PrescriptionsController : ControllerBase
             }
 
             // Se não foi detectado automaticamente, usar o tipo informado pelo usuário
-            var prescriptionType = detectedType ?? (PrescriptionType)type;
+            var prescriptionType = detectedType ?? (PrescriptionType)request.Type;
 
             // Upload para Azure Blob Storage
             string fileUrl;
@@ -123,7 +123,7 @@ public class PrescriptionsController : ControllerBase
             }
 
             // Parse da data
-            if (!DateOnly.TryParse(issueDate, out var issueDateParsed))
+            if (!DateOnly.TryParse(request.IssueDate, out var issueDateParsed))
             {
                 return BadRequest(new { message = "Invalid issue date format. Use yyyy-MM-dd." });
             }
@@ -137,15 +137,15 @@ public class PrescriptionsController : ControllerBase
             // Criar comando para salvar no banco
             var command = new UploadPrescriptionCommand
             {
-                PatientId = patientId,
+                PatientId = request.PatientId,
                 Type = prescriptionType,
                 IssueDate = issueDateParsed,
                 FileName = file.FileName,
                 FilePath = fileUrl, // URL do Azure Blob Storage
                 FileType = contentType,
-                DoctorName = doctorName,
-                DoctorCrm = doctorCrm,
-                Notes = notes
+                DoctorName = request.DoctorName,
+                DoctorCrm = request.DoctorCrm,
+                Notes = request.Notes
             };
 
             var prescriptionId = await _mediator.Send(command);
