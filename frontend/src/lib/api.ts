@@ -1,7 +1,16 @@
-const API_BASE =
+const envApiUrl =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
-    ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
-    : "/api";
+    ? String(import.meta.env.VITE_API_URL).trim()
+    : "";
+
+if (!envApiUrl) {
+  console.error(
+    "VITE_API_URL não está definido. Configure a URL do backend em um arquivo .env ou nos secrets do build."
+  );
+  throw new Error("VITE_API_URL não configurado");
+}
+
+const API_BASE = envApiUrl.replace(/\/$/, "");
 
 function getToken(): string | null {
   return localStorage.getItem('deja_token');
