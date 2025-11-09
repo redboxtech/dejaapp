@@ -42,6 +42,7 @@ export type HomeSummary = {
       name: string;
       remainingDoses: number;
       refillUntil: string;
+      refillLocation?: string;
     }>;
   };
   alerts: Array<{
