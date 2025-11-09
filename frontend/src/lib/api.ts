@@ -31,6 +31,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
   const res = await fetch(url, {
+  const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(url, {
     ...options,
     headers,
   });
