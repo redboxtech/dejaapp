@@ -27,16 +27,18 @@ export const homeSummaryMock: HomeSummary = {
     pendingConfirmation: 1,
     lowStock: [
       {
-        id: "med-1",
-        name: "Losartana 50mg",
-        remainingDoses: 8,
-        refillUntil: "2025-11-10",
-      },
-      {
         id: "med-2",
-        name: "Memantina 10mg",
+        name: "Espirolactona 25mg",
         remainingDoses: 2,
         refillUntil: "2025-11-09",
+        refillLocation: "Farmácia Central Bairro Azul",
+      },
+      {
+        id: "med-1",
+        name: "ASS 100mg",
+        remainingDoses: 8,
+        refillUntil: "2025-11-10",
+        refillLocation: "Posto de Saúde Jardim das Flores",
       },
     ],
   },

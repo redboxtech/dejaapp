@@ -13,6 +13,14 @@ import { colors, spacing, typography } from "@theme/index";
 
 type ActionCardProps = {
   label: string;
+  badge?: string;
+  badgeColor?: string;
+  badgeTextColor?: string;
+  badgeBorderColor?: string;
+  secondaryBadge?: string;
+  secondaryBadgeColor?: string;
+  secondaryBadgeTextColor?: string;
+  secondaryBadgeBorderColor?: string;
   description?: string;
   onPress?: () => void;
   accessibilityHint?: string;
@@ -25,10 +33,20 @@ type ActionCardProps = {
   iconColor?: string;
   iconBackgroundColor?: string;
   iconSize?: number;
+  pressedBackgroundColor?: string;
+  pressedBorderColor?: string;
 };
 
 export const ActionCard = ({
   label,
+  badge,
+  badgeColor = colors.primary,
+  badgeTextColor = colors.primaryContrast,
+  badgeBorderColor,
+  secondaryBadge,
+  secondaryBadgeColor = colors.warning,
+  secondaryBadgeTextColor = colors.textPrimary,
+  secondaryBadgeBorderColor,
   description,
   onPress,
   accessibilityHint,
@@ -40,18 +58,28 @@ export const ActionCard = ({
   descriptionColor = colors.textSecondary,
   iconColor = colors.primary,
   iconBackgroundColor = "rgba(108, 206, 217, 0.32)",
-  iconSize = 22
+  iconSize = 22,
+  pressedBackgroundColor = colors.secondaryTint,
+  pressedBorderColor = colors.primary
 }: ActionCardProps) => {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: !onPress }}
       onPress={onPress}
+      android_ripple={{
+        color: pressedBackgroundColor,
+        foreground: true
+      }}
       style={({ pressed }) => [
         styles.container,
-        { backgroundColor, borderColor: colors.surfaceBorder },
-        pressed && { backgroundColor: colors.secondaryTint },
+        {
+          backgroundColor: pressed ? pressedBackgroundColor : backgroundColor,
+          borderColor: pressed ? pressedBorderColor : colors.surfaceBorder
+        },
+        pressed && styles.pressed,
         style
       ]}
     >
@@ -67,7 +95,58 @@ export const ActionCard = ({
         </View>
 
         <View style={styles.content}>
-          <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+          <View style={styles.labelRow}>
+            <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+            {(badge || secondaryBadge) && (
+              <View style={styles.badgeColumn}>
+                {secondaryBadge ? (
+                  <View
+                    style={[
+                      styles.badge,
+                      styles.secondaryBadge,
+                      { backgroundColor: secondaryBadgeColor },
+                      secondaryBadgeBorderColor
+                        ? {
+                            borderWidth: 1,
+                            borderColor: secondaryBadgeBorderColor,
+                          }
+                        : null,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        styles.secondaryBadgeText,
+                        { color: secondaryBadgeTextColor }
+                      ]}
+                    >
+                      {secondaryBadge}
+                    </Text>
+                  </View>
+                ) : null}
+                {badge ? (
+                  <View
+                    style={[
+                      styles.badge,
+                      { backgroundColor: badgeColor },
+                      badgeBorderColor
+                        ? { borderWidth: 1, borderColor: badgeBorderColor }
+                        : null,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        { color: badgeTextColor }
+                      ]}
+                    >
+                      {badge}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            )}
+          </View>
           {description ? (
             <Text style={[styles.description, { color: descriptionColor }]}>{description}</Text>
           ) : null}
@@ -87,9 +166,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     shadowColor: colors.overlay,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.12,
     shadowRadius: 12,
-    elevation: 2
+    elevation: 2,
+    transform: [{ scale: 1 }]
   },
   row: {
     flexDirection: "row",
@@ -100,11 +180,49 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xs
   },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md
+  },
+  badgeColumn: {
+    alignItems: "flex-end",
+    gap: spacing.xs
+  },
+  badge: {
+    backgroundColor: colors.primary,
+    borderRadius: 999,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 1.5,
+    minWidth: 44,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  secondaryBadge: {
+    minWidth: 44,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 1.5
+  },
+  badgeText: {
+    ...typography.medium,
+    color: colors.primaryContrast,
+    fontSize: 13,
+    letterSpacing: 0.3
+  },
+  secondaryBadgeText: {
+    ...typography.medium,
+    fontSize: 13,
+    letterSpacing: 0.4
+  },
   label: {
     ...typography.medium,
     color: colors.textPrimary,
-    fontSize: 18,
-    letterSpacing: 0.2
+    fontSize: 17,
+    letterSpacing: 0.15,
+    flexShrink: 1,
+    flex: 1,
+    marginRight: spacing.sm
   },
   description: {
     ...typography.regular,
@@ -121,6 +239,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center"
+  },
+  pressed: {
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    elevation: 3,
+    transform: [{ scale: 0.97 }]
   }
 });
 
