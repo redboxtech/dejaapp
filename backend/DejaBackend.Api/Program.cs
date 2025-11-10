@@ -103,11 +103,17 @@ app.MapGet("/", (HttpContext context) =>
 })
 .WithName("RootHealthCheck");
 
-// Serve frontend (Vite build) in production from ../frontend/build
-var frontendBuildPath = Path.Combine(app.Environment.ContentRootPath, "..", "frontend", "build");
-if (Directory.Exists(frontendBuildPath))
+var candidatePaths = new[]
 {
-    var fileProvider = new PhysicalFileProvider(frontendBuildPath);
+    Path.Combine(app.Environment.ContentRootPath, "wwwroot"),
+    Path.Combine(app.Environment.ContentRootPath, "..", "frontend", "build")
+};
+
+var spaPath = candidatePaths.FirstOrDefault(Directory.Exists);
+
+if (spaPath != null)
+{
+    var fileProvider = new PhysicalFileProvider(spaPath);
 
     app.UseDefaultFiles(new DefaultFilesOptions
     {
@@ -121,17 +127,12 @@ if (Directory.Exists(frontendBuildPath))
         RequestPath = ""
     });
 
-    // SPA fallback for non-API routes
-    app.Use(async (context, next) =>
-    {
-        if (!context.Request.Path.StartsWithSegments("/api") &&
-            !context.Request.Path.StartsWithSegments("/swagger") &&
-            !Path.HasExtension(context.Request.Path.Value))
-        {
-            context.Request.Path = "/index.html";
-        }
-        await next();
-    });
+    app.MapFallback(() =>
+        Results.File(Path.Combine(spaPath, "index.html"), "text/html"));
+}
+else
+{
+    app.Logger.LogWarning("Nenhum build do frontend encontrado. Verifique se o bundle foi gerado.");
 }
 
 app.Run();
