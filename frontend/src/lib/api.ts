@@ -10,7 +10,11 @@ if (!envApiUrl) {
   throw new Error("VITE_API_URL não configurado");
 }
 
-const API_BASE = envApiUrl.replace(/\/$/, "");
+export const API_BASE = envApiUrl.replace(/\/$/, "");
+
+if (typeof window !== "undefined") {
+  (window as any).__DEJA_API_BASE__ = API_BASE;
+}
 
 console.log("API Base URL sendo usada:", API_BASE);
 

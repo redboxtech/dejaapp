@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { apiFetch, decodeJwt, setToken } from "../lib/api";
+import { apiFetch, decodeJwt, setToken, API_BASE } from "../lib/api";
 
 export interface User {
   id: string;
@@ -94,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           import.meta.env?.VITE_API_URL ?? "(não definido)"
         );
       }
+      console.log("Login - API_BASE:", API_BASE);
 
       const res = await apiFetch<{ token: string }>(`/auth/login`, {
         method: "POST",
