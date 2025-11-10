@@ -88,6 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      if (typeof import.meta !== "undefined") {
+        console.log(
+          "Login - VITE_API_URL:",
+          import.meta.env?.VITE_API_URL ?? "(não definido)"
+        );
+      }
+
       const res = await apiFetch<{ token: string }>(`/auth/login`, {
         method: "POST",
         body: JSON.stringify({ email, password }),
