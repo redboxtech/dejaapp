@@ -39,7 +39,7 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://deja-backend-api.azurewebsites.net' }}
 
-      - name: Copy frontend build to backend
+      - name: Prepare frontend build for backend publish
         run: |
           # O Vite está configurado para gerar em 'build' (vite.config.ts: outDir: 'build')
           # O Program.cs serve os arquivos de ../frontend/build
@@ -62,6 +62,13 @@ jobs:
           fi
 
           echo "Frontend build copiado com sucesso!"
+
+          # Copiar artefatos para o backend (wwwroot) antes do publish
+          echo "Sincronizando frontend/build com backend/DejaBackend.Api/wwwroot"
+          rm -rf backend/DejaBackend.Api/wwwroot
+          mkdir -p backend/DejaBackend.Api/wwwroot
+          cp -r frontend/build/* backend/DejaBackend.Api/wwwroot/
+          ls -la backend/DejaBackend.Api/wwwroot
 
       # Build Backend
       - name: Setup .NET
