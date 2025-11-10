@@ -60,9 +60,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.AllowAnyOrigin() // In a real app, this should be restricted to the frontend URL
+            policy.WithOrigins("https://app-dev.dejaapp.com.br") // Restrict to the Azure Static Web Apps domain
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()\n                  .AllowCredentials(); // Allow credentials for cookies/auth
         });
 });
 

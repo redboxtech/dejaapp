@@ -1,0 +1,12 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedMethods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "backend": "deja-backend-api-h3d4addgdpc4gsez.brazilsouth-01.azurewebsites.net"
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  }
+}
