@@ -1,16 +1,19 @@
-const envApiUrl =
+const DEFAULT_API_BASE =
+  "https://deja-backend-api-h3d4addgdpc4gsez.brazilsouth-01.azurewebsites.net";
+
+const rawApiUrl =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
     ? String(import.meta.env.VITE_API_URL).trim()
     : "";
 
-if (!envApiUrl) {
-  console.error(
-    "VITE_API_URL não está definido. Configure a URL do backend em um arquivo .env ou nos secrets do build."
+if (!rawApiUrl) {
+  console.warn(
+    "[Deja] VITE_API_URL não definido. Usando fallback padrão:",
+    DEFAULT_API_BASE
   );
-  throw new Error("VITE_API_URL não configurado");
 }
 
-export const API_BASE = envApiUrl.replace(/\/$/, "");
+export const API_BASE = (rawApiUrl || DEFAULT_API_BASE).replace(/\/$/, "");
 
 if (typeof window !== "undefined") {
   (window as any).__DEJA_API_BASE__ = API_BASE;
