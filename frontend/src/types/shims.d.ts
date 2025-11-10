@@ -60,3 +60,12 @@ declare module '@/lib/api' {
   export function apiFetch<T = any>(input: string, init?: any): Promise<T>;
 }
 
+interface ImportMetaEnv {
+  readonly VITE_API_URL?: string;
+  [key: string]: string | undefined;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
