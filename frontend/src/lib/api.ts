@@ -3,6 +3,8 @@ const API_BASE =
     ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
     : "/api";
 
+console.log("API Base URL sendo usada:", API_BASE);
+
 function getToken(): string | null {
   return localStorage.getItem('deja_token');
 }
