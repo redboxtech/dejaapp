@@ -3,6 +3,7 @@ using DejaBackend.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Primitives;
 using Microsoft.OpenApi.Models;
 using System.IO;
 using System.Linq;
@@ -62,7 +63,8 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins("https://app-dev.dejaapp.com.br") // Restrict to the Azure Static Web Apps domain
                   .AllowAnyHeader()
-                  .AllowAnyMethod()\n                  .AllowCredentials(); // Allow credentials for cookies/auth
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // Allow credentials for cookies/auth
         });
 });
 
@@ -86,7 +88,9 @@ app.MapControllers();
 
 app.MapGet("/", (HttpContext context) =>
 {
-    var acceptsHtml = context.Request.Headers.Accept.Any(header =>
+    var acceptsHeader = context.Request.Headers["Accept"];
+    var acceptsHtml = !StringValues.IsNullOrEmpty(acceptsHeader) && acceptsHeader.Any(header =>
+        !string.IsNullOrEmpty(header) &&
         header.Contains("text/html", StringComparison.OrdinalIgnoreCase));
 
     if (acceptsHtml)
@@ -113,7 +117,9 @@ var spaPath = candidatePaths.FirstOrDefault(Directory.Exists);
 
 if (spaPath != null)
 {
-    var fileProvider = new PhysicalFileProvider(spaPath);
+    var resolvedSpaPath = spaPath;
+    var indexFile = Path.Combine(resolvedSpaPath, "index.html");
+    var fileProvider = new PhysicalFileProvider(resolvedSpaPath);
 
     app.UseDefaultFiles(new DefaultFilesOptions
     {
@@ -128,7 +134,7 @@ if (spaPath != null)
     });
 
     app.MapFallback(() =>
-        Results.File(Path.Combine(spaPath, "index.html"), "text/html"));
+        Results.File(indexFile, "text/html"));
 }
 else
 {
