@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using System.IO;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,6 +83,25 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapGet("/", (HttpContext context) =>
+{
+    var acceptsHtml = context.Request.Headers.Accept.Any(header =>
+        header.Contains("text/html", StringComparison.OrdinalIgnoreCase));
+
+    if (acceptsHtml)
+    {
+        return Results.Redirect("/index.html");
+    }
+
+    return Results.Ok(new
+    {
+        status = "healthy",
+        environment = app.Environment.EnvironmentName,
+        timestamp = DateTimeOffset.UtcNow
+    });
+})
+.WithName("RootHealthCheck");
 
 // Serve frontend (Vite build) in production from ../frontend/build
 var frontendBuildPath = Path.Combine(app.Environment.ContentRootPath, "..", "frontend", "build");
